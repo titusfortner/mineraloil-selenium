@@ -1,6 +1,5 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.lithium.mineraloil.selenium.DriverManager;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -9,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class JavascriptHelper {
+class JavascriptHelper {
     private static final Logger logger = LoggerFactory.getLogger(JavascriptHelper.class);
 
     public static final String BLUR = "blur";
@@ -25,9 +24,13 @@ public class JavascriptHelper {
         }
     }
 
-    public static void openNewWindow(String url) {
+    public static Object executeScript(String script) {
         WebDriver driver = DriverManager.getCurrentWebDriver();
-        ((JavascriptExecutor) driver).executeScript(String.format("window.open('%s');", url));
+        return ((JavascriptExecutor) driver).executeScript(script);
+    }
+
+    public static void openNewWindow(String url) {
+        executeScript(String.format("window.open('%s');", url));
     }
 
     private static void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
@@ -41,4 +44,5 @@ public class JavascriptHelper {
                                                     eventParam1,
                                                     eventParam2);
     }
+
 }
