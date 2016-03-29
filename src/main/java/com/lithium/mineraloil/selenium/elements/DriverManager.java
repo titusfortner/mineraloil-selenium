@@ -5,6 +5,7 @@ import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.Data;
 import lombok.Getter;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Navigation;
@@ -253,5 +254,28 @@ public class DriverManager {
         return getHtml();
     }
 
+    public static void deleteAllCookies() {
+        getCurrentWebDriver().manage().deleteAllCookies();
+    }
+
+    public static void deleteCookie(Cookie cookie) {
+        getCurrentWebDriver().manage().deleteCookie(cookie);
+    }
+
+    public static void addCoookie(Cookie cookie) {
+        getCurrentWebDriver().manage().addCookie(cookie);
+    }
+
+    public static Cookie getCookie(String name) {
+        return getCurrentWebDriver().manage().getCookieNamed(name);
+    }
+
+    public static void deleteCookie(String name) {
+        getCurrentWebDriver().manage().deleteCookieNamed(name);
+    }
+
+    public static Set<Cookie> getCookies(String name) {
+        return getCurrentWebDriver().manage().getCookies();
+    }
 
 }
