@@ -1,4 +1,4 @@
-package com.lithium.mineraloil.selenium;
+package com.lithium.mineraloil.selenium.exceptions;
 
 
 public class DriverNotFoundException extends RuntimeException {

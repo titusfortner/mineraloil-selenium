@@ -1,4 +1,4 @@
-package com.lithium.mineraloil.selenium;
+package com.lithium.mineraloil.selenium.elements;
 
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.OutputType;

@@ -1,8 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
 
-import com.lithium.mineraloil.selenium.DriverManager;
-import com.lithium.mineraloil.selenium.Screenshot;
 import com.lithium.mineraloil.waiters.WaitCondition;
 import com.lithium.mineraloil.waiters.WaitExpiredException;
 import lombok.Getter;
@@ -492,15 +490,27 @@ public class BaseElement implements Element {
         return DriverManager.getCurrentWebDriver().switchTo().activeElement().equals(locateElement());
     }
 
+    public void flash() {
+        final WebElement element = locateElement();
+        JavascriptExecutor js = (JavascriptExecutor) DriverManager.getCurrentWebDriver();
+        String elementColor = (String)js.executeScript("arguments[0].style.backgroundColor", element);
+        elementColor = (elementColor == null) ? "" : elementColor;
+        for(int i = 0; i < 20; i++) {
+            String bgColor = (i % 2 == 0) ? "red" : elementColor;
+            js.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
+        }
+        js.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
+    }
+
     private static WebDriver getCurrentWebDriver() {
         return DriverManager.getCurrentWebDriver();
     }
 
-    void switchFocusToIFrame() {
+    public void switchFocusToIFrame() {
         getCurrentWebDriver().switchTo().frame(locateElement());
     }
 
-    static void switchFocusFromIFrame() {
+    public static void switchFocusFromIFrame() {
         try {
             getCurrentWebDriver().switchTo().parentFrame();
         } catch (Exception e) {

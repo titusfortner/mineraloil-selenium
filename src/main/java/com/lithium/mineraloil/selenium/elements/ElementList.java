@@ -1,7 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.lithium.mineraloil.selenium.DriverManager;
-import com.lithium.mineraloil.selenium.ElementListException;
+import com.lithium.mineraloil.selenium.exceptions.ElementListException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

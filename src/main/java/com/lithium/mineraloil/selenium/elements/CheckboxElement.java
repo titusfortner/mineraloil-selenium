@@ -1,7 +1,7 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import lombok.Delegate;
 import com.lithium.mineraloil.waiters.WaitCondition;
+import lombok.Delegate;
 import org.openqa.selenium.By;
 
 public class CheckboxElement implements Element {
