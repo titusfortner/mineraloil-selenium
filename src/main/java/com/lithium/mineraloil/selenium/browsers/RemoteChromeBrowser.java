@@ -1,6 +1,6 @@
 package com.lithium.mineraloil.selenium.browsers;
 
-import com.lithium.mineraloil.selenium.DriverNotFoundException;
+import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.Getter;
 import lombok.Setter;
 import org.openqa.selenium.WebDriver;
