@@ -35,7 +35,7 @@ public class RadioElement implements Element {
     }
 
     public boolean isDisabled() {
-        return "true".equals(getAttribute(ElementAttribute.DISABLED));
+        return "true".equals(getAttribute("disabled"));
 }
 
     @Override
@@ -46,7 +46,7 @@ public class RadioElement implements Element {
 
     @Override
     public boolean isSelected() {
-        return "true".equals(getAttribute(ElementAttribute.CHECKED));
+        return "true".equals(getAttribute("checked"));
     }
 
 }

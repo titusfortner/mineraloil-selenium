@@ -14,11 +14,11 @@ public interface ElementActions {
 
     void clickNoHover();
 
-    String getAttribute(ElementAttribute attributeName);
-
     String getTagName();
 
-    String getCssValue(CSSAttribute attributeName);
+    String getAttribute(String name);
+
+    String getCssValue(String name);
 
     String getText();
 

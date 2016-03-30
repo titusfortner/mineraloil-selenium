@@ -59,7 +59,7 @@ public class TableElement implements Element {
     }
 
     public List<Map<String, String>> getHash() {
-        Document doc = Jsoup.parse(this.getAttribute(ElementAttribute.OUTER_HTML), "UTF-8");
+        Document doc = Jsoup.parse(this.getAttribute("outerHTML"), "UTF-8");
         List<String> headerStrings = doc.select("thead > tr > td").stream()
                                         .map(org.jsoup.nodes.Element::text)
                                         .collect(Collectors.toList());

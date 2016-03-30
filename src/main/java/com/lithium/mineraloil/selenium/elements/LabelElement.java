@@ -8,7 +8,7 @@ public class LabelElement implements Element {
     private BaseElement baseElement;
 
     public LabelElement(Element referenceElement) {
-        baseElement = new BaseElement(By.xpath(String.format("//label[@for='%s']", referenceElement.getAttribute(ElementAttribute.NAME))));
+        baseElement = new BaseElement(By.xpath(String.format("//label[@for='%s']", referenceElement.getAttribute("name"))));
     }
 
     public LabelElement(By by, int index) {

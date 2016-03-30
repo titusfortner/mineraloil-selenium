@@ -157,12 +157,12 @@ public class BaseElement implements Element {
     }
 
     @Override
-    public String getAttribute(final ElementAttribute attributeName) {
-        logger.debug("BaseElement: getting attribute: " + attributeName.getValue());
+    public String getAttribute(final String name) {
+        logger.debug("BaseElement: getting attribute: " + name);
         try {
             return (String) new WaitCondition() {
                 public boolean isSatisfied() {
-                    setResult(locateElement().getAttribute(attributeName.getValue()));
+                    setResult(locateElement().getAttribute(name));
                     return true;
                 }
             }.setTimeout(TimeUnit.MILLISECONDS, ELEMENT_ATTRIBUTE_WAIT_MS).waitUntilSatisfied().getResult();
@@ -184,12 +184,12 @@ public class BaseElement implements Element {
     }
 
     @Override
-    public String getCssValue(final CSSAttribute attributeName) {
-        logger.debug("BaseElement: getting css value: " + attributeName.getValue());
+    public String getCssValue(final String name) {
+        logger.debug("BaseElement: getting css value: " + name);
         try {
             return (String) new WaitCondition() {
                 public boolean isSatisfied() {
-                    setResult(locateElement().getCssValue(attributeName.getValue()));
+                    setResult(locateElement().getCssValue(name));
                     return true;
 
                 }
