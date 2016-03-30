@@ -31,11 +31,11 @@ public class ImageElement implements Element {
         return (String) new WaitCondition() {
             @Override
             public boolean isSatisfied() {
-                if (StringUtils.isNotBlank(getAttribute(ElementAttribute.SOURCE)) ) {
-                    setResult(getAttribute(ElementAttribute.SOURCE));
+                if (StringUtils.isNotBlank(getAttribute("src")) ) {
+                    setResult(getAttribute("src"));
                     return true;
-                } else if (StringUtils.isNotBlank(getCssValue(CSSAttribute.BACKGROUND_IMAGE)) ) {
-                    setResult(getCssValue(CSSAttribute.BACKGROUND_IMAGE));
+                } else if (StringUtils.isNotBlank(getCssValue("background-image")) ) {
+                    setResult(getCssValue("background-image"));
                     return true;
                 } else {
                     return false;
