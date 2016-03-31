@@ -2,172 +2,137 @@ package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.browsers.BrowserType;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
-import lombok.Data;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Navigation;
+import org.openqa.selenium.WebDriver.TargetLocator;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class DriverManager {
-    private static final Logger logger = LoggerFactory.getLogger(DriverManager.class);
     private static final String DEFAULT_BROWSER_ID = "main-" + Thread.currentThread().getId();
 
-    @Getter
-    private static String defaultWindowHandle;
-
-    @Getter
     private static Stack<DriverInstance> drivers = new Stack<>();
 
-    @Data
-    protected static class DriverInstance {
-        protected WebDriver driver;
-        protected String id;
-        protected BrowserType browserType;
-
-        public DriverInstance(BrowserType browserType, String id) {
-            this.browserType = browserType;
-            startDriver(browserType, id);
-        }
-
-        private void startDriver(BrowserType browserType, String id) {
-            driver = browserType.create();
-            logger.info(String.format("Starting driver %s: %s", id, getDriver().getWindowHandle()));
-            defaultWindowHandle = getDriver().getWindowHandle();
-            this.id = id;
-        }
-
-    }
-
     public static boolean isDriverStarted() {
-        return drivers.size() > 0;
+        return !drivers.isEmpty();
     }
 
-    static WebDriver getCurrentWebDriver() {
-        DriverInstance currentDriver =  drivers.peek();
-        if (currentDriver == null) {
-            logger.warn(String.format("Driver not found for thread %s, starting new driver", Thread.currentThread().getId()));
-            startDriver(currentDriver.getBrowserType());
-            currentDriver =  drivers.peek();
-        }
-        return currentDriver.getDriver();
+    public static void startDriver(DriverConfiguration driverConfiguration, String id) {
+        driverConfiguration.setId(id);
+        drivers.push(new DriverInstance(driverConfiguration));
+        log.info("User Agent: " + getUserAgent());
     }
 
-    public static void gotoURL(String url, BrowserType browserType) {
-        try {
-            getCurrentWebDriver().get(url);
-        } catch (UnreachableBrowserException e) {
-            logger.info("WebDriver died...attempting restart: " +  drivers.peek().getId());
-            removeDriverInstance( drivers.peek().getId());
-            startDriver(browserType);
-            getCurrentWebDriver().get(url);
-        }
-    }
-
-    public static void gotoURL(String url) {
-        try {
-            getCurrentWebDriver().get(url);
-        } catch (UnreachableBrowserException e) {
-            logger.info("WebDriver died...attempting restart: " +  drivers.peek().getId());
-            removeDriverInstance( drivers.peek().getId());
-            startDriver( drivers.peek().getBrowserType());
-            getCurrentWebDriver().get(url);
-        }
-    }
-
-    public static void startDriver(BrowserType browserType) {
-        startDriver(DEFAULT_BROWSER_ID, browserType);
-    }
-
-    public static void startDriver(String id, BrowserType browserType) {
-        DriverInstance driverInstance = new DriverInstance(browserType, id);
-        putDriver(driverInstance);
-        if (driverInstance.getBrowserType().equals(BrowserType.CHROME)) {
-            maximizeWindow();
-        }
-        if (driverInstance.getBrowserType().equals(BrowserType.REMOTE_FIREFOX)) {
-            getCurrentWebDriver().manage().window().maximize();
-        }
-        logger.info(String.format("Starting driver %s: %s", id, driverInstance.getDriver().toString()));
-    }
-
-
-    public static void useDriver(String driver) {
-        getDriverInstance(driver);
-    }
-
-    public static void useDefaultDriver() {
-        getDriverInstance(DEFAULT_BROWSER_ID);
+    public static void startDriver(DriverConfiguration driverConfiguration) {
+        // make sure our browser has an ID
+        if (StringUtils.isBlank(driverConfiguration.getId())) driverConfiguration.setId(DEFAULT_BROWSER_ID);
+        startDriver(driverConfiguration, driverConfiguration.getId());
     }
 
     public static void stopDriver(String id) {
-        logger.info("Closing driver: " + id);
-        getDriverInstance(id).getDriver().close();
-        drivers.pop();
+        log.info("Stopping driver: " + id);
+        DriverInstance driverInstance = getDriver(id);
+        driverInstance.getDriver().quit();
+        drivers.remove(driverInstance);
+        if (isDriverStarted()) switchWindow();
     }
 
-    private static WebDriver instantiateDriver(BrowserType browserType) {
-        WebDriver driver = browserType.create();
-        driver.manage().window().maximize();
-        return driver;
+    private static DriverInstance getDriver(String driverId) {
+        return drivers.stream()
+                      .filter(driverInstance -> driverInstance.getDriverConfiguration().getId().equals(driverId))
+                      .collect(Collectors.toList())
+                      .get(0);
     }
 
+    // package private so we don't leak this outside of the abstraction
+    static WebDriver getDriver() {
+        if (!isDriverStarted()) throw new DriverNotFoundException("Unable to locate a started WebDriver instance");
+        return drivers.peek().getDriver();
+    }
+
+    public static DriverConfiguration getDriverConfiguration() {
+        if (!isDriverStarted()) throw new DriverNotFoundException("Unable to locate a started WebDriver instance");
+        return drivers.peek().getDriverConfiguration();
+    }
+
+    // switches to the last opened window
     public static void switchWindow() {
-        List<String> windowHandles = new ArrayList<>(getCurrentWebDriver().getWindowHandles());
-        getCurrentWebDriver().switchTo().window(windowHandles.get(windowHandles.size() - 1));
+        List<String> windowHandles = new ArrayList<>(getDriver().getWindowHandles());
+        getDriver().switchTo().window(windowHandles.get(windowHandles.size() - 1));
     }
 
+    // closes the last opened window
     public static void closeWindow() {
         switchWindow();
-        getCurrentWebDriver().close();
-        switchWindow();
+        getDriver().close();
+        if (isDriverStarted()) switchWindow();
     }
 
-    public static void openNewWindow(String url) {
-        JavascriptHelper.openNewWindow(url);
-        DriverManager.switchWindow();
+    public static void maximize() {
+        // chrome doesn't actually always maximize so implement workaround
+        if (getDriverConfiguration().getBrowserType().equals(BrowserType.CHROME) || getDriverConfiguration().getBrowserType().equals(BrowserType.REMOTE_CHROME)) {
+            java.awt.Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            org.openqa.selenium.Point position = new org.openqa.selenium.Point(0, 0);
+            getDriver().manage().window().maximize();
+            getDriver().manage().window().setPosition(position);
+            org.openqa.selenium.Dimension maximizedScreenSize =
+                    new org.openqa.selenium.Dimension((int) screenSize.getWidth(), (int) screenSize.getHeight());
+            getDriver().manage().window().setSize(maximizedScreenSize);
+        } else {
+            getDriver().manage().window().maximize();
+        }
     }
-
-    public static void maximizeWindow() {
-        java.awt.Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        org.openqa.selenium.Point position = new org.openqa.selenium.Point(0, 0);
-        getCurrentWebDriver().manage().window().maximize();
-        getCurrentWebDriver().manage().window().setPosition(position);
-        org.openqa.selenium.Dimension maximizedScreenSize =
-                new org.openqa.selenium.Dimension((int) screenSize.getWidth(), (int) screenSize.getHeight());
-        getCurrentWebDriver().manage().window().setSize(maximizedScreenSize);
-    }
-
 
     public static void quitAllBrowsers() {
         while (drivers.size() > 0) {
             DriverInstance driverInstance = drivers.pop();
-            logger.info("Closing driver id: " + driverInstance.getId());
+            log.info("Closing driver id: " + driverInstance.getDriverConfiguration().getId());
             try {
-                driverInstance.getDriver().close();
+                driverInstance.getDriver().quit();
             } catch (WebDriverException e) {
-                logger.info(String.format("There was an ignored exception closing the web driver : %s", e));
+                log.info(String.format("There was an ignored exception closing the web driver : %s", e));
             }
+        }
+    }
+
+    public static String getDownloadDirectory() {
+        return getDriverConfiguration().getDownloadDirectory();
+    }
+
+    public static void get(String url) {
+        try {
+            getDriver().get(url);
+        } catch (UnreachableBrowserException e) {
+            // this is a workaround for losing the connection or failing to start driver
+            log.info("WebDriver died...attempting restart: " + getDriverConfiguration().getId());
+            DriverConfiguration driverConfiguration = getDriverConfiguration();
+            stopDriver(driverConfiguration.getId());
+            startDriver(driverConfiguration);
+            getDriver().get(url);
         }
     }
 
     public static boolean isAlertPresent() {
         try {
-            getCurrentWebDriver().switchTo().alert();
+            getDriver().switchTo().alert();
             return true;
         } catch (NoAlertPresentException e) {
             return false;
@@ -175,107 +140,87 @@ public class DriverManager {
     }
 
     public static String getAlertText() {
-        return getCurrentWebDriver().switchTo().alert().getText();
+        return getDriver().switchTo().alert().getText();
     }
 
     public static void acceptAlert() {
-        getCurrentWebDriver().switchTo().alert().accept();
-    }
-
-    private static void putDriver(DriverInstance driverInstance) {
-        drivers.push(driverInstance);
-    }
-
-    private static DriverInstance getDriverInstance(String driverId) {
-        for (DriverInstance instance : drivers) {
-            if (instance.getId().equals(driverId)) {
-                return instance;
-            }
-        }
-        throw new DriverNotFoundException("Unable to locate a driver using: " + driverId);
-    }
-
-    private static DriverInstance removeDriverInstance(String driverId) {
-        // Iterate over stack and remove all occurences of DriverInstance with this id
-        Iterator<DriverInstance> iter = drivers.iterator();
-        DriverInstance driverInstance = null;
-        while (iter.hasNext()) {
-            driverInstance = iter.next();
-            logger.info("driverInstance " + driverInstance.getId());
-            if (driverInstance.getId().equals(driverId)) {
-                drivers.remove(driverInstance);
-                break;
-            }
-        }
-        return driverInstance;
+        getDriver().switchTo().alert().accept();
     }
 
     public static String getText() {
-        return getHTMLElement().getText();
-    }
-
-    public static String getHtml() {
-        return getCurrentWebDriver().getPageSource();
-    }
-
-    private static WebElement getHTMLElement() {
-        return getCurrentWebDriver().findElement(By.xpath("//html"));
-    }
-
-    public static Actions getActions() {
-        return new Actions(getCurrentWebDriver());
-    }
-
-    public static String getCurrentUrl() {
-        return getCurrentWebDriver().getCurrentUrl();
-    }
-
-    public static void switchToDefaultContent() {
-        getCurrentWebDriver().switchTo().defaultContent();
-    }
-
-    public static void get(String url) {
-        getCurrentWebDriver().get(url);
-    }
-
-    public static Set<String> getWindowHandles() {
-        return getCurrentWebDriver().getWindowHandles();
-    }
-
-    public static Navigation navigate() {
-        return getCurrentWebDriver().navigate();
-    }
-
-    public static Object executeScript(String script) {
-        return JavascriptHelper.executeScript(script);
+        return getDriver().findElement(By.xpath("//html")).getText();
     }
 
     public static String getPageSource() {
         return getHtml();
     }
 
+    public static String getHtml() {
+        return getDriver().getPageSource();
+    }
+
+    public static String getCurrentUrl() {
+        return getDriver().getCurrentUrl();
+    }
+
+    public static String getTitle() {
+        return getDriver().getTitle();
+    }
+
+    private static String getUserAgent() {
+        return (String) executeScript("return navigator.userAgent;");
+    }
+
+    public static Set<String> getWindowHandles() {
+        return getDriver().getWindowHandles();
+    }
+
     public static void deleteAllCookies() {
-        getCurrentWebDriver().manage().deleteAllCookies();
+        getDriver().manage().deleteAllCookies();
     }
 
     public static void deleteCookie(Cookie cookie) {
-        getCurrentWebDriver().manage().deleteCookie(cookie);
+        getDriver().manage().deleteCookie(cookie);
     }
 
     public static void addCoookie(Cookie cookie) {
-        getCurrentWebDriver().manage().addCookie(cookie);
+        getDriver().manage().addCookie(cookie);
     }
 
     public static Cookie getCookie(String name) {
-        return getCurrentWebDriver().manage().getCookieNamed(name);
+        return getDriver().manage().getCookieNamed(name);
     }
 
     public static void deleteCookie(String name) {
-        getCurrentWebDriver().manage().deleteCookieNamed(name);
+        getDriver().manage().deleteCookieNamed(name);
     }
 
     public static Set<Cookie> getCookies(String name) {
-        return getCurrentWebDriver().manage().getCookies();
+        return getDriver().manage().getCookies();
+    }
+
+    public static TargetLocator switchTo() {
+        return getDriver().switchTo();
+    }
+
+    public static Actions getActions() {
+        return new Actions(getDriver());
+    }
+
+    public static Navigation navigate() {
+        return getDriver().navigate();
+    }
+
+    public static Object executeScript(String script) {
+        return ((JavascriptExecutor) getDriver()).executeScript(script);
+    }
+
+    public static Object executeScript(String script, Object... args) {
+        return ((JavascriptExecutor) getDriver()).executeScript(script, args);
+    }
+
+    public static File takeScreenshot() {
+        return ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
     }
 
 }
