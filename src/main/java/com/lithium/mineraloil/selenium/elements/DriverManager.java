@@ -88,7 +88,7 @@ public class DriverManager {
 
     public static void maximize() {
         // chrome doesn't actually always maximize so implement workaround
-        if (getDriverConfiguration().getBrowserType().equals(BrowserType.CHROME) || getDriverConfiguration().getBrowserType().equals(BrowserType.REMOTE_CHROME)) {
+        if (getDriverConfiguration().getBrowserType().equals(BrowserType.CHROME)) {
             java.awt.Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             org.openqa.selenium.Point position = new org.openqa.selenium.Point(0, 0);
             getDriver().manage().window().maximize();

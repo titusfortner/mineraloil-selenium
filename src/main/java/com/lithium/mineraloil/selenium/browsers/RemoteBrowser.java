@@ -20,11 +20,11 @@ abstract class RemoteBrowser implements Browser {
     protected static URL serverAddress;
 
     public WebDriver getDriver() {
-        log.info(String.format("Attempting to connect to %s", serverAddress));
         String ip = System.getenv("TEST_IP") != null ? System.getenv("TEST_IP") : "127.0.0.1";
 
         try {
             serverAddress = new URL(String.format("http://%s:4444/wd/hub", ip));
+            log.info(String.format("Attempting to connect to %s", serverAddress));
         } catch (MalformedURLException e) {
             Throwables.propagate(e);
         }

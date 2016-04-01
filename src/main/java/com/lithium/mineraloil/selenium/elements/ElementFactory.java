@@ -1,11 +1,8 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import org.openqa.selenium.By;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ElementFactory {
-    private static Logger logger = LoggerFactory.getLogger(ElementFactory.class);
 
     public static BaseElement createBaseElement(By by) {
         return new BaseElement(by);

@@ -4,6 +4,7 @@ package com.lithium.mineraloil.selenium.elements;
 import com.lithium.mineraloil.waiters.WaitCondition;
 import com.lithium.mineraloil.waiters.WaitExpiredException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
@@ -11,20 +12,18 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class BaseElement implements Element {
     public static final int STALE_ELEMENT_WAIT_MS = 200;
     public static final int ELEMENT_ATTRIBUTE_WAIT_MS = 500;
     public static final int JS_EVENT_WAIT_MS = 500;
     public static final int FOCUS_WAIT_S = 1;
     public static final int DISPLAY_WAIT_S = 20;
-    private static final Logger logger = LoggerFactory.getLogger(BaseElement.class);
     private int index = -1;
 
     @Getter
@@ -72,10 +71,10 @@ public class BaseElement implements Element {
 
     @Override
     public WebElement locateElement() {
-        logger.debug(String.format("WebDriver: locating element: '%s', index '%s', parent '%s'", by, index, parentElement));
-        if (logger.isDebugEnabled()) {
+        log.debug(String.format("WebDriver: locating element: '%s', index '%s', parent '%s'", by, index, parentElement));
+        if (log.isDebugEnabled()) {
             if (DriverManager.isAlertPresent()) {
-                logger.debug("GOT UNEXPECTED ALERT");
+                log.debug("GOT UNEXPECTED ALERT");
             }
             Screenshot.takeScreenshot("locateElement");
         }
@@ -119,7 +118,7 @@ public class BaseElement implements Element {
                 webElement = DriverManager.getDriver().findElement(by);
             }
         }
-        logger.debug("WebDriver: Found element: " + webElement);
+        log.debug("WebDriver: Found element: " + webElement);
         return webElement;
     }
 
@@ -157,7 +156,7 @@ public class BaseElement implements Element {
 
     @Override
     public String getAttribute(final String name) {
-        logger.debug("BaseElement: getting attribute: " + name);
+        log.debug("BaseElement: getting attribute: " + name);
         try {
             return (String) new WaitCondition() {
                 public boolean isSatisfied() {
@@ -184,7 +183,7 @@ public class BaseElement implements Element {
 
     @Override
     public String getCssValue(final String name) {
-        logger.debug("BaseElement: getting css value: " + name);
+        log.debug("BaseElement: getting css value: " + name);
         try {
             return (String) new WaitCondition() {
                 public boolean isSatisfied() {
@@ -334,7 +333,7 @@ public class BaseElement implements Element {
 
     @Override
     public void sendKeys(final Keys... keys) {
-        logger.debug("BaseElement: sending " + Arrays.toString(keys));
+        log.debug("BaseElement: sending " + Arrays.toString(keys));
         new WaitCondition() {
             public boolean isSatisfied() {
                 WebElement element = locateElement();
@@ -510,7 +509,7 @@ public class BaseElement implements Element {
                 try {
                     TimeUnit.MILLISECONDS.sleep(JS_EVENT_WAIT_MS);
                 } catch (Exception e) {
-                    logger.info("Unable to wait for JS event to fire");
+                    log.info("Unable to wait for JS event to fire");
                 }
                 return true;
             }
