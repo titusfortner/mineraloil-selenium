@@ -1,54 +1,28 @@
 package com.lithium.mineraloil.selenium.browsers;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.google.common.base.Preconditions;
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+@Slf4j
+public class ChromeBrowser implements Browser {
+    private final DesiredCapabilities desiredCapabilities;
+    private final String binaryPath;
 
-@Getter
-@Setter
-public class ChromeBrowser extends BrowserImpl {
-    public static String downloadDirectory;
-
-    URL chromePath = getClass().getClassLoader().getResource("drivers/osx/chromedriver");
-    URL userDataDir = getClass().getClassLoader().getResource("chromeProfiles/");
+    public ChromeBrowser(DesiredCapabilities desiredCapabilities, String binaryPath) {
+        Preconditions.checkNotNull(binaryPath);
+        this.desiredCapabilities = desiredCapabilities;
+        this.binaryPath = binaryPath;
+    }
 
     @Override
-    protected WebDriver getDriver() {
-        System.setProperty("webdriver.chrome.driver", chromePath.getFile());
-        WebDriver driver = getDriverInstance();
-        logger.info("Browser User Agent: " + getUserAgent(driver));
+    public WebDriver getDriver() {
+        System.setProperty("webdriver.chrome.driver", binaryPath);
+        WebDriver driver = new ChromeDriver(desiredCapabilities);
+        log.info(String.format("Desired Capabilities: %s", desiredCapabilities));
         return driver;
     }
 
-    protected WebDriver getDriverInstance() {
-        return new ChromeDriver(getProfile());
-    }
-
-    private DesiredCapabilities getProfile() {
-        Map<String, Object> prefs = new HashMap<>();
-        DesiredCapabilities profile = DesiredCapabilities.chrome();
-        ChromeOptions options = new ChromeOptions();
-
-        String dataDirectory = userDataDir + UUID.randomUUID().toString().replaceAll("-.+", "").substring(0, 8);
-        downloadDirectory = String.format("%s", dataDirectory + "/Downloads");
-
-        prefs.put("download.default_directory", downloadDirectory);
-        prefs.put("profile.default_content_settings.popups", 0);
-        options.setExperimentalOption("prefs", prefs);
-        profile.setCapability("name", "chrome");
-        profile.setCapability(CapabilityType.TAKES_SCREENSHOT, true);
-        profile.setCapability("chrome.binary", chromePath.getFile());
-        profile.setCapability(ChromeOptions.CAPABILITY, options);
-        profile.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
-        return profile;
-    }
 }

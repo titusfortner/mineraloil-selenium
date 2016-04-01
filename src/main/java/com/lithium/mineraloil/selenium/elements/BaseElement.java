@@ -5,11 +5,9 @@ import com.lithium.mineraloil.waiters.WaitCondition;
 import com.lithium.mineraloil.waiters.WaitExpiredException;
 import lombok.Getter;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -23,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class BaseElement implements Element {
     public static final int STALE_ELEMENT_WAIT_MS = 200;
     public static final int ELEMENT_ATTRIBUTE_WAIT_MS = 500;
+    public static final int JS_EVENT_WAIT_MS = 500;
     public static final int FOCUS_WAIT_S = 1;
     public static final int DISPLAY_WAIT_S = 20;
     private static final Logger logger = LoggerFactory.getLogger(BaseElement.class);
@@ -78,7 +77,7 @@ public class BaseElement implements Element {
             if (DriverManager.isAlertPresent()) {
                 logger.debug("GOT UNEXPECTED ALERT");
             }
-            Screenshot.takeScreenShot("locateElement");
+            Screenshot.takeScreenshot("locateElement");
         }
 
         if (isWithinIFrame()) {
@@ -111,13 +110,13 @@ public class BaseElement implements Element {
             }
         } else {
             if (index >= 0) {
-                List<WebElement> elements = getCurrentWebDriver().findElements(by);
+                List<WebElement> elements = DriverManager.getDriver().findElements(by);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = getCurrentWebDriver().findElement(by);
+                webElement = DriverManager.getDriver().findElement(by);
             }
         }
         logger.debug("WebDriver: Found element: " + webElement);
@@ -143,7 +142,7 @@ public class BaseElement implements Element {
     @Override
     public void doubleClick() {
         hover();
-        new Actions(getCurrentWebDriver()).doubleClick(locateElement());
+        DriverManager.getActions().doubleClick(locateElement());
     }
 
     @Override
@@ -323,7 +322,7 @@ public class BaseElement implements Element {
     @Override
     public void hover() {
         waitUntilDisplayed();
-        final Actions hoverHandler = new Actions(getCurrentWebDriver());
+        final Actions hoverHandler = DriverManager.getActions();
         final WebElement element = locateElement();
         new WaitCondition() {
             public boolean isSatisfied() {
@@ -355,19 +354,8 @@ public class BaseElement implements Element {
     }
 
     @Override
-    public void fireBlurEvent() {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                new JavascriptHelper().fireBlurEvent(locateElement());
-                return true;
-            }
-        }.waitUntilSatisfied();
-    }
-
-    @Override
     public void scrollIntoView() {
-        ((JavascriptExecutor) DriverManager.getCurrentWebDriver()).executeScript("arguments[0].scrollIntoView(true);", locateElement());
+        DriverManager.executeScript("arguments[0].scrollIntoView(true);", locateElement());
     }
 
     @Override
@@ -480,41 +468,62 @@ public class BaseElement implements Element {
         return new WaitCondition() {
             @Override
             public boolean isSatisfied() {
-                return focus();
+                return DriverManager.switchTo().activeElement().equals(locateElement());
             }
         }.setTimeout(TimeUnit.SECONDS, FOCUS_WAIT_S).waitAndIgnoreExceptions().isSuccessful();
     }
 
     @Override
-    public boolean focus() {
-        return DriverManager.getCurrentWebDriver().switchTo().activeElement().equals(locateElement());
+    public void focus() {
+        DriverManager.getActions().moveToElement(locateElement()).perform();
     }
 
     public void flash() {
         final WebElement element = locateElement();
-        JavascriptExecutor js = (JavascriptExecutor) DriverManager.getCurrentWebDriver();
-        String elementColor = (String)js.executeScript("arguments[0].style.backgroundColor", element);
+        String elementColor = (String) DriverManager.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
         for(int i = 0; i < 20; i++) {
             String bgColor = (i % 2 == 0) ? "red" : elementColor;
-            js.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
+            DriverManager.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
         }
-        js.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
-    }
-
-    private static WebDriver getCurrentWebDriver() {
-        return DriverManager.getCurrentWebDriver();
+        DriverManager.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
     }
 
     public void switchFocusToIFrame() {
-        getCurrentWebDriver().switchTo().frame(locateElement());
+        DriverManager.switchTo().frame(locateElement());
     }
 
     public static void switchFocusFromIFrame() {
         try {
-            getCurrentWebDriver().switchTo().parentFrame();
+            DriverManager.switchTo().parentFrame();
         } catch (Exception e) {
-            getCurrentWebDriver().switchTo().defaultContent();
+            DriverManager.switchTo().defaultContent();
         }
+    }
+
+    public void fireEvent(String eventName) {
+        new WaitCondition() {
+            @Override
+            public boolean isSatisfied() {
+                dispatchJSEvent(locateElement(), eventName, true, true);
+
+                try {
+                    TimeUnit.MILLISECONDS.sleep(JS_EVENT_WAIT_MS);
+                } catch (Exception e) {
+                    logger.info("Unable to wait for JS event to fire");
+                }
+                return true;
+            }
+        }.waitUntilSatisfied();
+    }
+
+    private static void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
+        String cancelPreviousEventJS = "if (evObj && evObj.stopPropagation) { evObj.stopPropagation(); }";
+        String dispatchEventJS = String.format("var evObj = document.createEvent('Event'); evObj.initEvent('%s', arguments[1], arguments[2]); arguments[0].dispatchEvent(evObj);",
+                                               event);
+        DriverManager.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
+                                                    element,
+                                                    eventParam1,
+                                                    eventParam2);
     }
 }

@@ -2,7 +2,6 @@ package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.exceptions.ElementListException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import java.lang.reflect.InvocationTargetException;
@@ -82,12 +81,11 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     }
 
     private List<WebElement> getElements() {
-        WebDriver driver = DriverManager.getCurrentWebDriver();
         handlePossibleIFrame();
         if (parentElement != null) {
-           return parentElement.locateElement().findElements(by);
+            return parentElement.locateElement().findElements(by);
         } else {
-            return driver.findElements(by);
+            return DriverManager.getDriver().findElements(by);
         }
     }
 

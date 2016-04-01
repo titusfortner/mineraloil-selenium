@@ -34,7 +34,7 @@ public interface ElementActions {
 
     boolean isSelected();
 
-    boolean focus();
+    void focus();
 
     boolean isFocused();
 
@@ -42,7 +42,7 @@ public interface ElementActions {
 
     void sendKeys(final Keys... keys);
 
-    void fireBlurEvent();
+    void fireEvent(String eventName);
 
     void scrollIntoView();
 
