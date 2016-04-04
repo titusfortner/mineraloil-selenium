@@ -2,6 +2,7 @@ package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Throwables;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
+import com.lithium.mineraloil.waiters.WaitCondition;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 
@@ -35,29 +36,27 @@ abstract class RemoteBrowser implements Browser {
     }
 
     protected WebDriver getDriverInThread() {
-        WebDriver webDriver = null;
+        WebDriver webDriver;
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future future = executorService.submit(getDriverThreadCallableInstance());
 
-        int retries = 0;
-        int maxRetries = 5;
-        while (retries < maxRetries) {
-            retries++;
-
-            try {
-                log.info("Getting Remote Driver");
-                webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
-                break;
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                log.info("Couldn't get Remote Driver!!", e);
-                continue;
+        webDriver = (WebDriver) new WaitCondition() {
+            @Override
+            public boolean isSatisfied() {
+                try {
+                    log.info("Getting Remote Driver");
+                    WebDriver webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
+                    setResult(webDriver);
+                    return true;
+                } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                    return false;
+                }
             }
-        }
-
-        if (retries == maxRetries || webDriver == null) {
-            throw new DriverNotFoundException("Was unable to get a Remote Driver!!!");
-        }
+        }.waitUntilSatisfied()
+         .setPollInterval(TimeUnit.SECONDS, 2)
+         .throwExceptionOnFailure(new DriverNotFoundException("Was unable to get a Remote Driver!!!"))
+        .getResult();
 
         executorService.shutdown();
         return webDriver;
