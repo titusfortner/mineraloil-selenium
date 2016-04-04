@@ -2,19 +2,24 @@ package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.browsers.BrowserType;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
+import com.lithium.mineraloil.waiters.WaiterImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriver.Navigation;
 import org.openqa.selenium.WebDriver.TargetLocator;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.interactions.MoveTargetOutOfBoundsException;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import java.awt.*;
@@ -28,8 +33,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DriverManager {
     private static final String DEFAULT_BROWSER_ID = "main-" + Thread.currentThread().getId();
-
     private static Stack<DriverInstance> drivers = new Stack<>();
+
+
+    static {
+        WaiterImpl.addExpectedException(StaleElementReferenceException.class);
+        WaiterImpl.addExpectedException(NoSuchElementException.class);
+        WaiterImpl.addExpectedException(ElementNotVisibleException.class);
+        WaiterImpl.addExpectedException(WebDriverException.class);
+        WaiterImpl.addExpectedException(MoveTargetOutOfBoundsException.class);
+    }
 
     public static boolean isDriverStarted() {
         return !drivers.isEmpty();
