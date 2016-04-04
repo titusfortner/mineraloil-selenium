@@ -50,7 +50,7 @@ abstract class RemoteBrowser implements Browser {
                 webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
                 break;
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                log.info("Couldn't get Remote Driver!!");
+                log.info("Couldn't get Remote Driver!!", e);
                 continue;
             }
         }
