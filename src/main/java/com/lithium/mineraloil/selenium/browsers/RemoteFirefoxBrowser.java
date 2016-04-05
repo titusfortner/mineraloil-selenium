@@ -1,5 +1,6 @@
 package com.lithium.mineraloil.selenium.browsers;
 
+import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -13,9 +14,18 @@ import java.util.concurrent.Callable;
 @Slf4j
 public class RemoteFirefoxBrowser extends RemoteBrowser {
     private final FirefoxProfile firefoxProfile;
+    private final int remoteFirefoxPort;
+    private final String remoteWebdriverAddress;
 
-    public RemoteFirefoxBrowser(FirefoxProfile firefoxProfile) {
-        this.firefoxProfile = firefoxProfile;
+    public RemoteFirefoxBrowser(DriverConfiguration driverConfiguration) {
+        firefoxProfile = driverConfiguration.getFirefoxProfile();
+        remoteFirefoxPort = driverConfiguration.getRemoteFirefoxPort() != 0 ? driverConfiguration.getRemoteFirefoxPort() : 4444;
+        remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
+    }
+
+    @Override
+    public WebDriver getDriver() {
+        return getDriver(remoteWebdriverAddress, remoteFirefoxPort);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.lithium.mineraloil.selenium.browsers;
 
+import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -11,9 +12,18 @@ import java.util.concurrent.Callable;
 @Slf4j
 public class RemoteChromeBrowser extends RemoteBrowser {
     private final DesiredCapabilities desiredCapabilities;
+    private final int remoteChromePort;
+    private final String remoteWebdriverAddress;
 
-    public RemoteChromeBrowser(DesiredCapabilities desiredCapabilities) {
-        this.desiredCapabilities = desiredCapabilities;
+    public RemoteChromeBrowser(DriverConfiguration driverConfiguration) {
+        desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
+        remoteChromePort = driverConfiguration.getRemoteChromePort() != 0 ? driverConfiguration.getRemoteChromePort() : 4444;
+        remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
+    }
+
+    @Override
+    public WebDriver getDriver() {
+        return getDriver(remoteWebdriverAddress, remoteChromePort);
     }
 
     @Override

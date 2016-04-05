@@ -13,6 +13,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 @Slf4j
 public class DriverConfiguration {
     private WebDriver driver;
+    private int remoteChromePort;
+    private int remoteFirefoxPort;
     private String id;
     private BrowserType browserType;
     private String chromeExecutablePath;
@@ -20,4 +22,5 @@ public class DriverConfiguration {
     private FirefoxProfile firefoxProfile;
     private DesiredCapabilities chromeDesiredCapabilities;
     private String downloadDirectory;
+    private String remoteWebdriverAddress;
 }

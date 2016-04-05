@@ -1,6 +1,7 @@
 package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Preconditions;
+import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -11,10 +12,10 @@ public class ChromeBrowser implements Browser {
     private final DesiredCapabilities desiredCapabilities;
     private final String binaryPath;
 
-    public ChromeBrowser(DesiredCapabilities desiredCapabilities, String binaryPath) {
-        Preconditions.checkNotNull(binaryPath);
-        this.desiredCapabilities = desiredCapabilities;
-        this.binaryPath = binaryPath;
+    public ChromeBrowser(DriverConfiguration driverConfiguration) {
+        Preconditions.checkNotNull(driverConfiguration.getChromeExecutablePath());
+        desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
+        binaryPath = driverConfiguration.getChromeExecutablePath();
     }
 
     @Override
