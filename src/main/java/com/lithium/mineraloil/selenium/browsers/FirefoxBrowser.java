@@ -1,7 +1,9 @@
 package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Preconditions;
+import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -15,18 +17,15 @@ public class FirefoxBrowser implements Browser {
     private String binaryPath;
 
 
-    public FirefoxBrowser(FirefoxProfile profile) {
-        firefoxProfile = profile;
-    }
-
-    public FirefoxBrowser(FirefoxProfile profile, String binaryPath) {
-        this.binaryPath = binaryPath;
+    public FirefoxBrowser(DriverConfiguration driverConfiguration) {
+        firefoxProfile = driverConfiguration.getFirefoxProfile();
+        binaryPath = driverConfiguration.getFirefoxExecutablePath();
     }
 
     @Override
     public WebDriver getDriver() {
         log.info(String.format("Firefox Profile: %s", firefoxProfile));
-        if (binaryPath != null) {
+        if (StringUtils.isNotBlank(binaryPath)) {
             File file = new File(binaryPath);
             Preconditions.checkArgument(file.exists());
             log.info("Using the following FireFox executable: " + file);

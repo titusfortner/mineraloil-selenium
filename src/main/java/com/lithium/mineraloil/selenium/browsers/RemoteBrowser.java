@@ -20,11 +20,10 @@ import java.util.concurrent.TimeoutException;
 abstract class RemoteBrowser implements Browser {
     protected static URL serverAddress;
 
-    public WebDriver getDriver() {
-        String ip = System.getenv("TEST_IP") != null ? System.getenv("TEST_IP") : "127.0.0.1";
+    protected WebDriver getDriver(String ip, int port) {
 
         try {
-            serverAddress = new URL(String.format("http://%s:4444/wd/hub", ip));
+            serverAddress = new URL(String.format("http://%s:%s/wd/hub", ip, port));
             log.info(String.format("Attempting to connect to %s", serverAddress));
         } catch (MalformedURLException e) {
             Throwables.propagate(e);
@@ -34,6 +33,8 @@ abstract class RemoteBrowser implements Browser {
         logCapabilities();
         return webDriver;
     }
+
+    public abstract WebDriver getDriver();
 
     protected WebDriver getDriverInThread() {
         WebDriver webDriver;

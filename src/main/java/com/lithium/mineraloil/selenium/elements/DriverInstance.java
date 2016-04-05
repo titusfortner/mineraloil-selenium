@@ -21,16 +21,16 @@ class DriverInstance {
     private void startWebDriver(DriverConfiguration driverConfiguration) {
         switch (driverConfiguration.getBrowserType()) {
             case FIREFOX:
-                driver = new FirefoxBrowser(driverConfiguration.getFirefoxProfile()).getDriver();
+                driver = new FirefoxBrowser(driverConfiguration).getDriver();
                 break;
             case CHROME:
-                driver = new ChromeBrowser(driverConfiguration.getChromeDesiredCapabilities(), driverConfiguration.getChromeExecutablePath()).getDriver();
+                driver = new ChromeBrowser(driverConfiguration).getDriver();
                 break;
             case REMOTE_CHROME:
-                driver = new RemoteChromeBrowser(driverConfiguration.getChromeDesiredCapabilities()).getDriver();
+                driver = new RemoteChromeBrowser(driverConfiguration).getDriver();
                 break;
             case REMOTE_FIREFOX:
-                driver = new RemoteFirefoxBrowser(driverConfiguration.getFirefoxProfile()).getDriver();
+                driver = new RemoteFirefoxBrowser(driverConfiguration).getDriver();
                 break;
             default:
                 throw new DriverNotFoundException("Not sure how to start browser for: " + driverConfiguration.getBrowserType().name());
