@@ -20,8 +20,9 @@ import java.util.concurrent.TimeoutException;
 abstract class RemoteBrowser implements Browser {
     protected static URL serverAddress;
 
-    protected WebDriver getDriver(String ip, int port) {
+    public abstract WebDriver getDriver();
 
+    protected WebDriver getDriver(String ip, int port) {
         try {
             serverAddress = new URL(String.format("http://%s:%s/wd/hub", ip, port));
             log.info(String.format("Attempting to connect to %s", serverAddress));
@@ -29,37 +30,36 @@ abstract class RemoteBrowser implements Browser {
             Throwables.propagate(e);
         }
 
-        WebDriver webDriver = getDriverInThread();
+        WebDriver webDriver = (WebDriver) new WaitCondition() {
+            @Override
+            public boolean isSatisfied() {
+                WebDriver webDriver = getDriverInThread();
+                setResult(webDriver);
+                return webDriver != null;
+            }
+        }.waitUntilSatisfied()
+         .setPollInterval(TimeUnit.SECONDS, 2)
+         .throwExceptionOnFailure(new DriverNotFoundException("Was unable to get a Remote Driver!!!"))
+         .getResult();
+
         logCapabilities();
         return webDriver;
     }
 
-    public abstract WebDriver getDriver();
-
-    protected WebDriver getDriverInThread() {
+    private WebDriver getDriverInThread() {
         WebDriver webDriver;
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future future = executorService.submit(getDriverThreadCallableInstance());
 
-        webDriver = (WebDriver) new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                try {
-                    log.info("Getting Remote Driver");
-                    WebDriver webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
-                    setResult(webDriver);
-                    return true;
-                } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                    return false;
-                }
-            }
-        }.waitUntilSatisfied()
-         .setPollInterval(TimeUnit.SECONDS, 2)
-         .throwExceptionOnFailure(new DriverNotFoundException("Was unable to get a Remote Driver!!!"))
-        .getResult();
-
-        executorService.shutdown();
+        try {
+            webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            // return null for webdriver so we retry
+            webDriver = null;
+        } finally {
+            executorService.shutdown();
+        }
         return webDriver;
     }
 
