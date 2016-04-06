@@ -118,6 +118,15 @@ public class DriverManager {
         while (drivers.size() > 0) {
             DriverInstance driverInstance = drivers.pop();
             log.info("Closing driver id: " + driverInstance.getDriverConfiguration().getId());
+            // close windows
+            try {
+                while (driverInstance.getDriver().getWindowHandles().size() > 0) {
+                    driverInstance.getDriver().close();
+                }
+            } catch (WebDriverException e) {
+                log.info(String.format("There was an ignored exception closing the browser : %s", e));
+            }
+            // close driver
             try {
                 driverInstance.getDriver().quit();
             } catch (WebDriverException e) {
