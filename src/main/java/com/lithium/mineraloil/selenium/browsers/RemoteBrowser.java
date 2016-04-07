@@ -38,7 +38,8 @@ abstract class RemoteBrowser implements Browser {
                 return webDriver != null;
             }
         }.waitUntilSatisfied()
-         .setPollInterval(TimeUnit.SECONDS, 2)
+         .setTimeout(TimeUnit.MINUTES, 5)
+         .setPollInterval(TimeUnit.SECONDS, 1)
          .throwExceptionOnFailure(new DriverNotFoundException("Was unable to get a Remote Driver!!!"))
          .getResult();
 
@@ -53,9 +54,10 @@ abstract class RemoteBrowser implements Browser {
         Future future = executorService.submit(getDriverThreadCallableInstance());
 
         try {
-            webDriver = (WebDriver) future.get(1, TimeUnit.MINUTES);
+            webDriver = (WebDriver) future.get(5, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             // return null for webdriver so we retry
+            log.info("Failed to get driver connection...retrying", e);
             webDriver = null;
         } finally {
             executorService.shutdown();
