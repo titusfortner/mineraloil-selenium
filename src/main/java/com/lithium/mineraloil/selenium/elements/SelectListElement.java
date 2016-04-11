@@ -2,6 +2,7 @@ package com.lithium.mineraloil.selenium.elements;
 
 import lombok.Delegate;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.Select;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class SelectListElement implements Element, SelectList {
         return this;
     }
 
+    @Override
     public String getSelectedOption() {
         return new Select(baseElement.locateElement()).getFirstSelectedOption().getText();
     }
@@ -40,6 +42,15 @@ public class SelectListElement implements Element, SelectList {
     @Override
     public void select(String optionText) {
         new Select(baseElement.locateElement()).selectByVisibleText(optionText);
+    }
+
+    @Override
+    public void selectIfContains(String optionText) {
+        List<String> options = getAvailableOptions().stream()
+                .filter(opt -> opt.contains(optionText))
+                .collect(Collectors.toList());
+        if (options.isEmpty()) throw new NoSuchElementException("Unable to locate select list item containing: " + optionText);
+        select(options.get(0));
     }
 
     @Override

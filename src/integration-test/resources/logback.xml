@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <!--make this debug to get stack traces in waiters-->
+    <logger name="lsw.waiters.WaiterImpl" level="info" />
+
+    <!--make this debug to get EXTENSIVE logging for:
+        web calls
+        screenshots before each web call
+        creation of target/screenshots/firefox_console log for webdriver
+    -->
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>
