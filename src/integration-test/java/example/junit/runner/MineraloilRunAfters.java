@@ -1,6 +1,5 @@
 package example.junit.runner;
 
-import com.lithium.mineraloil.selenium.elements.Screenshot;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.MultipleFailureException;
@@ -16,13 +15,13 @@ public class MineraloilRunAfters extends Statement {
     private final Object target;
 
     private final List<FrameworkMethod> afters;
-    private final FrameworkMethod method;
+    private final String name;
 
-    public MineraloilRunAfters(Statement next, List<FrameworkMethod> afters, Object target, FrameworkMethod method) {
+    public MineraloilRunAfters(Statement next, List<FrameworkMethod> afters, Object target, String name) {
         this.next = next;
         this.afters = afters;
         this.target = target;
-        this.method = method;
+        this.name = name;
     }
 
     @Override
@@ -33,10 +32,7 @@ public class MineraloilRunAfters extends Statement {
         } catch (Throwable e) {
             errors.add(e);
         } finally {
-            if (errors.size() > 0) {
-                takeScreenshot(method);
-                takeHTMLSnapshot(method);
-            }
+            int beforeErrorCount = errors.size();
             for (FrameworkMethod each : afters) {
                 try {
                     each.invokeExplosively(target);
@@ -44,23 +40,15 @@ public class MineraloilRunAfters extends Statement {
                     errors.add(e);
                 }
             }
+            if (errors.size() > beforeErrorCount) {
+                String testClassName = afters.get(0).getDeclaringClass().getName();
+                if (afters.get(0).getAnnotations()[0].toString().contains("AfterClass")) {
+                    MineraloilRunner.takeScreenshots(String.format("%s.%s", testClassName, "afterClass"));
+                } else {
+                    MineraloilRunner.takeScreenshots(String.format("%s.%s.%s", testClassName, name, "after"));
+                }
+            }
         }
         MultipleFailureException.assertEmpty(errors);
-    }
-
-    private void takeHTMLSnapshot(FrameworkMethod method) {
-        try {
-            Screenshot.takeHTMLScreenshot(method.getDeclaringClass().getName() + "." + method.getName());
-        } catch (Exception exception) {
-            log.error("Unable to take screenshot for: " +  method.getName());
-        }
-    }
-
-    private void takeScreenshot(FrameworkMethod description) {
-        try {
-            Screenshot.takeScreenshot(method.getDeclaringClass().getName() + "." + method.getName());
-        } catch (Exception exception) {
-            log.error("Unable to take screenshot for: " +  method.getName());
-        }
     }
 }
