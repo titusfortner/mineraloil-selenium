@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class DriverManager {
@@ -71,8 +70,8 @@ public class DriverManager {
     private static DriverInstance getDriver(String driverId) {
         return drivers.stream()
                       .filter(driverInstance -> driverInstance.getDriverConfiguration().getId().equals(driverId))
-                      .collect(Collectors.toList())
-                      .get(0);
+                      .findFirst()
+                      .get();
     }
 
     // package private so we don't leak this outside of the abstraction
