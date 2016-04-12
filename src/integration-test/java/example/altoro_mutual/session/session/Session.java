@@ -15,11 +15,6 @@ public class Session {
         sessionPage.navigate();
         sessionPage.getUsernameElement().type(username);
         sessionPage.getPasswordElement().type(password);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         sessionPage.getLoginButton().click();
     }
 
