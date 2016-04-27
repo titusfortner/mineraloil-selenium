@@ -142,6 +142,7 @@ public class BaseElement implements Element {
     public void doubleClick() {
         hover();
         DriverManager.getActions().doubleClick(locateElement());
+        DriverManager.waitForPageLoad();
     }
 
     @Override
@@ -152,6 +153,7 @@ public class BaseElement implements Element {
                 return true;
             }
         }.waitUntilSatisfied();
+        DriverManager.waitForPageLoad();
     }
 
     @Override

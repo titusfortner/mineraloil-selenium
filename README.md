@@ -106,6 +106,31 @@ Supporting iframes only requires you to register the iframe locator. Each time y
         return container.createBaseElement(By.xpath("//iframe"));
     }
 
+## Application-specific page waits
+
+In a lot of applications there are general cases where you need to wait for on page load, even after the browser thinks the page content is complete. This might be a 'loading...' lightbox, a whirlygig, or could even be that the page heavily uses javascript to generate the page elements. To handle that, you can add any number of generic page waiters using DriverManager#addPageLoadWaiter
+
+```
+DriverManager.addPageLoadWaiter(new PageLoadWaiter() {
+            @Override
+            public TimeUnit getTimeUnit() {
+                return TimeUnit.SECONDS;
+            }
+
+            @Override
+            public int getTimeout() {
+                // how long to wait before timing out
+                return 5;
+            }
+
+            @Override
+            public boolean isSatisfied() {
+                // say we want to make sure there's no spinning whirlygig on the page
+                return !ElementFactory.createBaseElement(By.xpath("path-to-whirlygig")).isDisplayed();
+            }
+        });
+```
+
 ## Sample Test Suite
 
 To give you a better idea of how this framework might look in practice, we've included an example. This example uses JUnit and a few simple tests. 

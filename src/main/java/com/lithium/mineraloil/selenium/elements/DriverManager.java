@@ -1,7 +1,10 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.browsers.BrowserType;
+import com.lithium.mineraloil.selenium.browsers.PageLoadWaiter;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
+import com.lithium.mineraloil.selenium.exceptions.PageLoadWaiterTimeoutException;
+import com.lithium.mineraloil.waiters.WaitCondition;
 import com.lithium.mineraloil.waiters.WaiterImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +28,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -33,7 +37,7 @@ import java.util.Stack;
 public class DriverManager {
     private static final String DEFAULT_BROWSER_ID = "main-" + Thread.currentThread().getId();
     private static Stack<DriverInstance> drivers = new Stack<>();
-
+    private static Set<PageLoadWaiter> pageLoadWaiters = new HashSet<>();
 
     static {
         WaiterImpl.addExpectedException(StaleElementReferenceException.class);
@@ -143,6 +147,7 @@ public class DriverManager {
             startDriver(driverConfiguration);
             getDriver().get(url);
         }
+        waitForPageLoad();
     }
 
     public static boolean isAlertPresent() {
@@ -238,4 +243,23 @@ public class DriverManager {
         return ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
     }
 
+    public static void addPageLoadWaiter(PageLoadWaiter pageLoadWaiter) {
+        pageLoadWaiters.add(pageLoadWaiter);
+    }
+
+    public static void waitForPageLoad() {
+        for (PageLoadWaiter pageLoadWaiter : pageLoadWaiters) {
+            String callerClass = pageLoadWaiter.getClass().getEnclosingClass().getName();
+            String callerPackage = pageLoadWaiter.getClass().getEnclosingClass().getPackage().getName();
+            String exceptionMessage = String.format("Timed out in PageLoadWaiter: package '%s', class '%s'", callerPackage, callerClass);
+            new WaitCondition() {
+                @Override
+                public boolean isSatisfied() {
+                    return pageLoadWaiter.isSatisfied();
+                }
+            }.setTimeout(pageLoadWaiter.getTimeUnit(), pageLoadWaiter.getTimeout())
+             .throwExceptionOnFailure(new PageLoadWaiterTimeoutException(exceptionMessage))
+            .waitUntilSatisfied();
+        }
+    }
 }
