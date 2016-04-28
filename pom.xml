@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.lithium</groupId>
         <artifactId>lithium-oss-superpom</artifactId>
-        <version>0.9</version>
+        <version>0.12</version>
     </parent>
 
     <groupId>com.lithium.mineraloil</groupId>
