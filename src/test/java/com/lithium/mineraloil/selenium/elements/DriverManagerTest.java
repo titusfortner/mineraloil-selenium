@@ -1,8 +1,7 @@
 package com.lithium.mineraloil.selenium.elements;
 
 
-import com.lithium.mineraloil.selenium.browsers.BrowserType;
-import com.lithium.mineraloil.selenium.helpers.ChromeSettings;
+import com.lithium.mineraloil.selenium.helpers.BrowserHelper;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
@@ -18,13 +17,8 @@ public class DriverManagerTest {
 
     @BeforeClass
     public static void setup() {
-        chromeConfig = DriverConfiguration.builder()
-                                          .browserType(BrowserType.CHROME)
-                                          .executablePath(ChromeSettings.getChromeBinary().getPath())
-                                          .chromeDesiredCapabilities(ChromeSettings.getDesiredCapabilities())
-                                          .build();
-        testUrl = String.format("file://%s",
-                                DriverManagerTest.class.getClassLoader().getResource("htmls/test.html").getPath());
+        chromeConfig = BrowserHelper.getDriverConfiguration();
+        testUrl = String.format("file://%s", BrowserHelper.getUrl());
     }
 
     @Before
