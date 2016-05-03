@@ -58,8 +58,8 @@ public enum DriverManager {
     }
 
     public void stopDriver() {
-        log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", drivers.size()));
         DriverInstance driverInstance = drivers.pop();
+        log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", drivers.size()));
         driverInstance.getDriver().quit();
         if (isDriverStarted()) switchWindow();
     }
