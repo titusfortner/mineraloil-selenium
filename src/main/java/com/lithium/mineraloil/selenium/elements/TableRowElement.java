@@ -1,6 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import lombok.Delegate;
+import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 
 public class TableRowElement implements Element {

@@ -11,7 +11,7 @@ public class OnUIFinish extends TestWatcher {
     @Override
     protected void finished(Description description) {
         log.info("UI FINISH");
-        DriverManager.quitAllBrowsers();
+        DriverManager.INSTANCE.stopAllDrivers();
         super.finished(description);
     }
 

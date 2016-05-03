@@ -1,6 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import lombok.Delegate;
+import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 
@@ -33,10 +33,6 @@ public class RadioElement implements Element {
         if (isDisabled()) throw new ElementNotVisibleException("RadioElement is disabled and not selectable.");
         click();
     }
-
-    public boolean isDisabled() {
-        return "true".equals(getAttribute("disabled"));
-}
 
     @Override
     public RadioElement registerIFrame(Element iframeElement) {

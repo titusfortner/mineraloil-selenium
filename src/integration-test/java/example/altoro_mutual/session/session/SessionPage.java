@@ -8,7 +8,7 @@ import org.openqa.selenium.By;
 
 public class SessionPage {
     public void navigate() {
-        DriverManager.get(Session.baseURL + "bank/login.aspx");
+        DriverManager.INSTANCE.get(Session.baseURL + "bank/login.aspx");
     }
 
     public TextInputElement getUsernameElement() {

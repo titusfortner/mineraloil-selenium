@@ -1,0 +1,41 @@
+<html>
+
+<head>
+    <title>Test</title>
+</head>
+
+<body>
+<h1>Test HTML Site</h1>
+
+<image src="http://www.lithium.com/media_kit/lithium-logo-registered-black.png" height="100" width="200"></image><br>
+<iframe src="iframe.html" height="40"></iframe>
+<div>
+    <button id="alert_button" onclick="myFunction()">Click for popup</button>
+    <script>
+        function myFunction() {
+            alert("Alert Now");
+        }
+    </script>
+</div>
+<div>
+    <a id="new_tab_link" href="" target="_blank">Click for New Tab</a>
+</div>
+<div id="displayed_element" style="display:inline;">Displayed Element</div>
+<div class="duplicate_class">Element With Shared Class</div>
+<div id="nested_div">
+    <div id="last_level">
+        <div class="duplicate_class">Nested Value With Shared Class</div>
+    </div>
+</div>
+<div id="buttons">
+    <button id="active_button" onclick="myFunction()">Active Button</button>
+    <button id="disabled_button" disabled="true" onclick="myFunction()">Disabled Button</button>
+</div>
+<div id="checkboxes">
+    <input type="checkbox" name="Yes" value="Yes">Yes
+    <input type="checkbox" name="No" value="No">No
+</div>
+
+</body>
+
+</html>

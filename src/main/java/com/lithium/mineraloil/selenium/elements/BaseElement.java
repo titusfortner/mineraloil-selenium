@@ -6,6 +6,7 @@ import com.lithium.mineraloil.waiters.WaitExpiredException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
+import org.openqa.selenium.By.ByXPath;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -73,7 +74,7 @@ public class BaseElement implements Element {
     public WebElement locateElement() {
         log.debug(String.format("WebDriver: locating element: '%s', index '%s', parent '%s'", by, index, parentElement));
         if (log.isDebugEnabled()) {
-            if (DriverManager.isAlertPresent()) {
+            if (DriverManager.INSTANCE.isAlertPresent()) {
                 log.debug("GOT UNEXPECTED ALERT");
             }
             Screenshot.takeScreenshot("locateElement");
@@ -98,24 +99,37 @@ public class BaseElement implements Element {
         }
 
         if (parentElement != null) {
+            By xpathBy = by;
+            if (by instanceof ByXPath) {
+                /*
+                Allows users to be able to do a complete node search within its parent without adding .// before
+                Example:
+                    parent.createBaseElement("//div[@id='testId']");
+                    parent.createBaseElement(".//div[@id='testId']");
+
+                Both examples will now search within the parent.
+                 */
+                String xpath = by.toString().replace("By.xpath: ", "").replaceFirst("^.?//", ".//");
+                xpathBy = By.xpath(xpath);
+            }
             if (index >= 0) {
-                List<WebElement> elements = parentElement.locateElement().findElements(by);
+                List<WebElement> elements = parentElement.locateElement().findElements(xpathBy);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = parentElement.locateElement().findElement(by);
+                webElement = parentElement.locateElement().findElement(xpathBy);
             }
         } else {
             if (index >= 0) {
-                List<WebElement> elements = DriverManager.getDriver().findElements(by);
+                List<WebElement> elements = DriverManager.INSTANCE.getDriver().findElements(by);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = DriverManager.getDriver().findElement(by);
+                webElement = DriverManager.INSTANCE.getDriver().findElement(by);
             }
         }
         log.debug("WebDriver: Found element: " + webElement);
@@ -141,8 +155,8 @@ public class BaseElement implements Element {
     @Override
     public void doubleClick() {
         hover();
-        DriverManager.getActions().doubleClick(locateElement());
-        DriverManager.waitForPageLoad();
+        DriverManager.INSTANCE.getActions().doubleClick(locateElement());
+        DriverManager.INSTANCE.waitForPageLoad();
     }
 
     @Override
@@ -153,7 +167,7 @@ public class BaseElement implements Element {
                 return true;
             }
         }.waitUntilSatisfied();
-        DriverManager.waitForPageLoad();
+        DriverManager.INSTANCE.waitForPageLoad();
     }
 
     @Override
@@ -242,6 +256,10 @@ public class BaseElement implements Element {
         return true;
     }
 
+    public boolean isDisabled() {
+        return "true".equals(getAttribute("disabled"));
+    }
+
     @Override
     public void waitUntilDisplayed() {
         waitUntilDisplayed(TimeUnit.SECONDS, DISPLAY_WAIT_S);
@@ -323,7 +341,7 @@ public class BaseElement implements Element {
     @Override
     public void hover() {
         waitUntilDisplayed();
-        final Actions hoverHandler = DriverManager.getActions();
+        final Actions hoverHandler = DriverManager.INSTANCE.getActions();
         final WebElement element = locateElement();
         new WaitCondition() {
             public boolean isSatisfied() {
@@ -356,7 +374,7 @@ public class BaseElement implements Element {
 
     @Override
     public void scrollIntoView() {
-        DriverManager.executeScript("arguments[0].scrollIntoView(true);", locateElement());
+        DriverManager.INSTANCE.executeScript("arguments[0].scrollIntoView(true);", locateElement());
     }
 
     @Override
@@ -469,36 +487,36 @@ public class BaseElement implements Element {
         return new WaitCondition() {
             @Override
             public boolean isSatisfied() {
-                return DriverManager.switchTo().activeElement().equals(locateElement());
+                return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement());
             }
         }.setTimeout(TimeUnit.SECONDS, FOCUS_WAIT_S).waitAndIgnoreExceptions().isSuccessful();
     }
 
     @Override
     public void focus() {
-        DriverManager.getActions().moveToElement(locateElement()).perform();
+        DriverManager.INSTANCE.getActions().moveToElement(locateElement()).perform();
     }
 
     public void flash() {
         final WebElement element = locateElement();
-        String elementColor = (String) DriverManager.executeScript("arguments[0].style.backgroundColor", element);
+        String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
         for(int i = 0; i < 20; i++) {
             String bgColor = (i % 2 == 0) ? "red" : elementColor;
-            DriverManager.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
+            DriverManager.INSTANCE.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
         }
-        DriverManager.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
+        DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
     }
 
     public void switchFocusToIFrame() {
-        DriverManager.switchTo().frame(locateElement());
+        DriverManager.INSTANCE.switchTo().frame(locateElement());
     }
 
     public static void switchFocusFromIFrame() {
         try {
-            DriverManager.switchTo().parentFrame();
+            DriverManager.INSTANCE.switchTo().parentFrame();
         } catch (Exception e) {
-            DriverManager.switchTo().defaultContent();
+            DriverManager.INSTANCE.switchTo().defaultContent();
         }
     }
 
@@ -522,7 +540,7 @@ public class BaseElement implements Element {
         String cancelPreviousEventJS = "if (evObj && evObj.stopPropagation) { evObj.stopPropagation(); }";
         String dispatchEventJS = String.format("var evObj = document.createEvent('Event'); evObj.initEvent('%s', arguments[1], arguments[2]); arguments[0].dispatchEvent(evObj);",
                                                event);
-        DriverManager.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
+        DriverManager.INSTANCE.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
                                                     element,
                                                     eventParam1,
                                                     eventParam2);

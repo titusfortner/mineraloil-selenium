@@ -1,7 +1,7 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.waiters.WaitCondition;
-import lombok.Delegate;
+import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 

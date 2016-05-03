@@ -17,7 +17,7 @@ public class RemoteChromeBrowser extends RemoteBrowser {
 
     public RemoteChromeBrowser(DriverConfiguration driverConfiguration) {
         desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
-        remoteChromePort = driverConfiguration.getRemoteChromePort() != 0 ? driverConfiguration.getRemoteChromePort() : 4444;
+        remoteChromePort = driverConfiguration.getRemotePort() != 0 ? driverConfiguration.getRemotePort() : 4444;
         remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
     }
 

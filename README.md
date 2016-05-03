@@ -16,19 +16,22 @@ Interacting with the browser is done through the DriverManager class. This class
 
 To configure and start the driver:
 
-    public static DriverConfiguration getDriverConfiguration(BrowserType browserType) {
-        return DriverConfiguration.builder()
-                                  .browserType(browserType)
-                                  .chromeExecutablePath(ChromeSettings.getChromeBinary().getPath())
-                                  .chromeDesiredCapabilities(ChromeSettings.getDesiredCapabilities(downloadDirectory))
-                                  .build();
-    }
+```java
+public static DriverConfiguration getDriverConfiguration(BrowserType browserType) {
+    return DriverConfiguration.builder()
+                              .browserType(browserType)
+                              .executablePath(ChromeSettings.getChromeBinary().getPath())
+                              .chromeDesiredCapabilities(ChromeSettings.getDesiredCapabilities(downloadDirectory))
+                              .build();
+}
 
-    public static void startBrowser() {
-        if (!DriverManager.isDriverStarted()) {
-            DriverManager.startDriver(getDriverConfiguration(browserType));
-        }
+public static void startBrowser() {
+    if (!DriverManager.INSTANCE.isDriverStarted()) {
+        DriverManager.INSTANCE.setDriverConfiguration(getDriverConfiguration(browserType));
+        DriverManager.INSTANCE.startDriver();
     }
+}
+```
 
 The DriverManager also handles screenshots, executing javascript, getting text and html, methods to handle cookies, and all of the standard methods from the webdriver interface. This is to make sure that we don't have a leaky abstraction - one of the things we were careful *not* to expose, is access to the WebDriver instance itself. 
 
@@ -36,12 +39,24 @@ The DriverManager also handles screenshots, executing javascript, getting text a
 
 There are cases where you want to open another window or some action in your UI automatically opens a new window. To switch between these, you can use the following approach:
 
-        somebutton.click();             // opens a new tab or window or could be code to start a second browser session
-        DriverManager.switchWindow();   // switchs focus to the last window opened
-        // do something with that window
-        DriverManager.closeWindow();    // closes the current window and switches focus to the last opened window
+```java
+somebutton.click();             // opens a new tab or window or could be code to start a second browser session
+DriverManager.INSTANCE.switchWindow();   // switchs focus to the last window opened
+// do something with that window
+DriverManager.INSTANCE.closeWindow();    // closes the current window and switches focus to the last opened window
+```
 
 If you want to manage this yourself, you can use DriverManager.switchto() and then use whatever selenium provides to change window focus.
+
+## Managing multiple browser sessions
+
+Sometimes when running your tests, you need a separate browser independent of the session you have at the current moment.
+
+```java
+DriverManager.INSTANCE.startDriver(); // By running startDriver() again after the initial startup, the focus will now be on the newly started browser
+DriverManager.INSTANCE.stopDriver(); // This will close the most recently created browser
+DriverManager.INSTANCE.stopAllDrivers(); //This will kill all the drivers
+```
 
 ## Web Elements
 
@@ -63,9 +78,11 @@ There are of course business rules which may require you to wait for something o
 
 In your page class you can create an elements using the ElementFactory. Ideally, these are really simple and only return elements like this:
 
-    public SelectListElement getAccountSelectElement() {
-        return ElementFactory.createSelectListElement(By.id("foo"));
-    }
+```java
+public SelectListElement getAccountSelectElement() {
+    return ElementFactory.createSelectListElement(By.id("foo"));
+}
+```
 
 The ElementFactory#createSelectListElement takes in a By and returns a SelectListElement. Then you can then use the element like you would any other selenium web element and call #select, #getSelectedOption, etc. 
 
@@ -85,9 +102,11 @@ You can chain method calls when creating elements. This is useful when you need 
 
 You can interact with a list of elements similar to webdriver#findElements. To do this, simply pluralize the ElementFactory call: 
 
-    public List<BaseElement> getSearchResults() {
-        return ElementFactory.createBaseElements(By.id("foo"));
-    }
+```java
+public List<BaseElement> getSearchResults() {
+    return ElementFactory.createBaseElements(By.id("foo"));
+}
+```
 
 You can also get lists of elements relative to another element: 
 
@@ -97,20 +116,22 @@ You can also get lists of elements relative to another element:
 
 Supporting iframes only requires you to register the iframe locator. Each time you interact with the element, the framework will automatically switch focus to the iframe, locate and get the element then switch back to the default content. 
 
-    public TextInputElement getTextFieldElement() {
-        return ElementFactory.createTextInputElement(By.xpath("//body[contains(@class,'frameClass')]"))
-                             .registerIFrame(getIFrameElement());
-    }
+```java
+public TextInputElement getTextFieldElement() {
+    return ElementFactory.createTextInputElement(By.xpath("//body[contains(@class,'frameClass')]"))
+                         .registerIFrame(getIFrameElement());
+}
 
-    public BaseElement getIFrameElement() {
-        return container.createBaseElement(By.xpath("//iframe"));
-    }
+public BaseElement getIFrameElement() {
+    return container.createBaseElement(By.xpath("//iframe"));
+}
+```
 
 ## Application-specific page waits
 
 In a lot of applications there are general cases where you need to wait for on page load, even after the browser thinks the page content is complete. This might be a 'loading...' lightbox, a whirlygig, or could even be that the page heavily uses javascript to generate the page elements. To handle that, you can add any number of generic page waiters using DriverManager#addPageLoadWaiter
 
-```
+```java
 DriverManager.addPageLoadWaiter(new PageLoadWaiter() {
             @Override
             public TimeUnit getTimeUnit() {

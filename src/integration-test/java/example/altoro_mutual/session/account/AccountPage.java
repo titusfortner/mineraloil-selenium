@@ -11,7 +11,7 @@ import org.openqa.selenium.By;
 public class AccountPage {
 
     public void navigate() {
-        DriverManager.get(Session.baseURL + "bank/main.aspx");
+        DriverManager.INSTANCE.get(Session.baseURL + "bank/main.aspx");
     }
 
     public SelectListElement getAccountSelectElement() {

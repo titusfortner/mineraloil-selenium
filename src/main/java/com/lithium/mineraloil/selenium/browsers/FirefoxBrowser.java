@@ -19,7 +19,7 @@ public class FirefoxBrowser implements Browser {
 
     public FirefoxBrowser(DriverConfiguration driverConfiguration) {
         firefoxProfile = driverConfiguration.getFirefoxProfile();
-        binaryPath = driverConfiguration.getFirefoxExecutablePath();
+        binaryPath = driverConfiguration.getExecutablePath();
     }
 
     @Override

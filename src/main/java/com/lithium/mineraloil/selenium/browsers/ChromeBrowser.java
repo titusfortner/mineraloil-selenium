@@ -13,9 +13,9 @@ public class ChromeBrowser implements Browser {
     private final String binaryPath;
 
     public ChromeBrowser(DriverConfiguration driverConfiguration) {
-        Preconditions.checkNotNull(driverConfiguration.getChromeExecutablePath());
+        Preconditions.checkNotNull(driverConfiguration.getExecutablePath());
         desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
-        binaryPath = driverConfiguration.getChromeExecutablePath();
+        binaryPath = driverConfiguration.getExecutablePath();
     }
 
     @Override

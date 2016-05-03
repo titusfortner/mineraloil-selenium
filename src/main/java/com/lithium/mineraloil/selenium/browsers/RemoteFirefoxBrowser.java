@@ -19,7 +19,7 @@ public class RemoteFirefoxBrowser extends RemoteBrowser {
 
     public RemoteFirefoxBrowser(DriverConfiguration driverConfiguration) {
         firefoxProfile = driverConfiguration.getFirefoxProfile();
-        remoteFirefoxPort = driverConfiguration.getRemoteFirefoxPort() != 0 ? driverConfiguration.getRemoteFirefoxPort() : 4444;
+        remoteFirefoxPort = driverConfiguration.getRemotePort() != 0 ? driverConfiguration.getRemotePort() : 4444;
         remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
     }
 

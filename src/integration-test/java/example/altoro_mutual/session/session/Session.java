@@ -22,11 +22,12 @@ public class Session {
     public static String baseURL = "http://demo.testfire.net/";
 
     public static void startBrowser() {
-        if (!DriverManager.isDriverStarted()) {
-            DriverManager.startDriver(getDriverConfiguration(browserType));
-            DriverManager.maximize();
+        if (!DriverManager.INSTANCE.isDriverStarted()) {
+            DriverManager.INSTANCE.setDriverConfiguration(getDriverConfiguration(browserType));
+            DriverManager.INSTANCE.startDriver();
+            DriverManager.INSTANCE.maximize();
             log.info("URL: " + baseURL);
-            DriverManager.get(baseURL);
+            DriverManager.INSTANCE.get(baseURL);
         }
     }
 
@@ -35,7 +36,7 @@ public class Session {
         return DriverConfiguration.builder()
                                   .browserType(browserType)
                                   .downloadDirectory(downloadDirectory)
-                                  .chromeExecutablePath(ChromeSettings.getChromeBinary().getPath())
+                                  .executablePath(ChromeSettings.getChromeBinary().getPath())
                                   .chromeDesiredCapabilities(ChromeSettings.getDesiredCapabilities(downloadDirectory))
                                   .firefoxProfile(FirefoxSettings.getFirefoxProfile(downloadDirectory))
                                   .build();

@@ -1,6 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import lombok.Delegate;
+import lombok.experimental.Delegate;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;

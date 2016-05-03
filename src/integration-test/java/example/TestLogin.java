@@ -15,7 +15,7 @@ public class TestLogin extends BaseUITest {
 
     @Test
     public void testLogin() {
-        Assert.assertTrue(DriverManager.getText().contains("Hello John Smith"));
+        Assert.assertTrue(DriverManager.INSTANCE.getText().contains("Hello John Smith"));
     }
 
 }

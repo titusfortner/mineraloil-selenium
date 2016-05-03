@@ -85,7 +85,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
         if (parentElement != null) {
             return parentElement.locateElement().findElements(by);
         } else {
-            return DriverManager.getDriver().findElements(by);
+            return DriverManager.INSTANCE.getDriver().findElements(by);
         }
     }
 
