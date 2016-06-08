@@ -3,6 +3,7 @@ package com.lithium.mineraloil.selenium.elements;
 import lombok.NonNull;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
@@ -132,7 +133,8 @@ public class WebdriverActions {
         }
     }
 
-
-
+    public void setSize(Dimension dimension) {
+        driver.manage().window().setSize(dimension);
+    }
 
 }
