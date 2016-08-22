@@ -15,6 +15,8 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.interactions.MoveTargetOutOfBoundsException;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import java.util.ArrayList;
@@ -138,5 +140,10 @@ public enum DriverManager {
              .throwExceptionOnFailure(new PageLoadWaiterTimeoutException(exceptionMessage))
              .waitUntilSatisfied();
         }
+    }
+
+    public LogEntries getConsoleLog() {
+        DriverManager.INSTANCE.executeScript("console.log('Logging Errors');");
+        return DriverManager.INSTANCE.getDriver().manage().logs().get(LogType.BROWSER);
     }
 }
