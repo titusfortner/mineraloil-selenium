@@ -143,6 +143,7 @@ public enum DriverManager {
     }
 
     public LogEntries getConsoleLog() {
+        log.info("Console Log output: ");
         DriverManager.INSTANCE.executeScript("console.log('Logging Errors');");
         return DriverManager.INSTANCE.getDriver().manage().logs().get(LogType.BROWSER);
     }
