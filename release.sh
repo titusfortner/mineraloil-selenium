@@ -2,7 +2,7 @@
 set -o errexit
 RELEASE_BRANCH="release"
 DEVELOP_BRANCH="master"
-TAG_PREFIX="analytics"
+TAG_PREFIX="mineraloil-selenium"
 WORK_PREFIX="rel"
 if [ "$#" != "2" ]; then
     echo "Must provide 2 arguments:"
