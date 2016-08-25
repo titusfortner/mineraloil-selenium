@@ -39,6 +39,6 @@ mvn -DnewVersion=$SNAPSHOT -f pom.xml versions:set
 git commit -am "Updating version for $SNAPSHOT"
 
 # Push master, release, and tags
-# git push origin master
-# git push --tags
+git push origin master
+git push --tags
 echo "All done!"
