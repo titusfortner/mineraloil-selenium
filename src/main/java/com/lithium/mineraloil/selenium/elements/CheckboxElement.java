@@ -6,23 +6,15 @@ import org.openqa.selenium.By;
 
 public class CheckboxElement implements Element {
 
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
+    @Delegate
+    private final ElementImpl<CheckboxElement> elementImpl;
 
     public CheckboxElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public CheckboxElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public CheckboxElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public CheckboxElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public void check() {
@@ -30,7 +22,7 @@ public class CheckboxElement implements Element {
             new WaitCondition() {
                 @Override
                 public boolean isSatisfied() {
-                    baseElement.click();
+                    elementImpl.click();
                     return isChecked();
                 }
             }.waitUntilSatisfied();
@@ -46,7 +38,7 @@ public class CheckboxElement implements Element {
             new WaitCondition() {
                 @Override
                 public boolean isSatisfied() {
-                    baseElement.click();
+                    elementImpl.click();
                     return !isChecked();
                 }
             }.waitUntilSatisfied();
@@ -57,9 +49,4 @@ public class CheckboxElement implements Element {
         if (value != isChecked()) click();
     }
 
-    @Override
-    public CheckboxElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
-    }
 }

@@ -11,21 +11,15 @@ import java.util.List;
 
 public class ElementList<T extends Element> extends AbstractList<T> {
     protected final By by;
-    private Element parentElement;
     private Class className;
-    private Element iframeElement = null;
+    private Element<T> parentElement;
+    private Element<T> iframeElement;
+    private boolean autoScrollIntoView;
 
     public ElementList(By by, Class className) {
         this.by = by;
         this.className = className;
     }
-
-    public ElementList(Element parentElement, By by, Class className) {
-        this.parentElement = parentElement;
-        this.by = by;
-        this.className = className;
-    }
-
 
     @Override
     public int size() {
@@ -56,14 +50,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     public T get(int index) {
         String errorMessage = String.format("Unable to get %s item from collection of %s", index, className);
         try {
-            if (parentElement != null) {
-                return handlePossibleIFrameElement((T) className.getDeclaredConstructor(Element.class,
-                                                                                        By.class,
-                                                                                        int.class)
-                                                                .newInstance(parentElement, by, index));
-            } else {
-                return handlePossibleIFrameElement((T) className.getDeclaredConstructor(By.class, int.class).newInstance(by, index));
-            }
+            return handlePossibleIFrameElement((T) className.getDeclaredConstructor(By.class, int.class).newInstance(by, index));
         } catch (InstantiationException e) {
             throw new ElementListException(errorMessage);
         } catch (IllegalAccessException e) {
@@ -75,8 +62,18 @@ public class ElementList<T extends Element> extends AbstractList<T> {
         }
     }
 
-    public ElementList<T> registerIFrame(Element iframeElement) {
+    public ElementList<T> withIFrame(Element iframeElement) {
         this.iframeElement = iframeElement;
+        return this;
+    }
+
+    public ElementList<T> withParent(Element parentElement) {
+        this.parentElement = parentElement;
+        return this;
+    }
+
+    public ElementList<T> withAutoScrollIntoView() {
+        this.autoScrollIntoView = true;
         return this;
     }
 
@@ -91,15 +88,15 @@ public class ElementList<T extends Element> extends AbstractList<T> {
 
     private void handlePossibleIFrame() {
         if (iframeElement == null) {
-            BaseElement.switchFocusFromIFrame();
+            ElementImpl.switchFocusFromIFrame();
         } else  {
             ((BaseElement) iframeElement).switchFocusToIFrame();
         }
     }
 
     private T handlePossibleIFrameElement(T elementToReturn) {
-        return (iframeElement == null) ?
-               elementToReturn :
-               (T) elementToReturn.registerIFrame(iframeElement);
+        return (T) elementToReturn.withIframe(iframeElement)
+                                  .withParent(parentElement)
+                                  .withAutoScrollIntoView();
     }
 }

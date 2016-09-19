@@ -6,36 +6,22 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 public class FileUploadElement implements Element {
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
+    @Delegate
+    private final ElementImpl<FileUploadElement> elementImpl;
 
     public FileUploadElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public FileUploadElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public FileUploadElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public FileUploadElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
-    }
-
-    @Override
-    public FileUploadElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public void type(final String text) {
         if (text == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                WebElement element = baseElement.locateElement();
+                WebElement element = elementImpl.locateElement();
                 element.sendKeys(text);
                 return true;
             }

@@ -10,29 +10,22 @@ import org.openqa.selenium.WebElement;
 import java.util.concurrent.TimeUnit;
 
 public class TextInputElement implements Element {
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
+
+    @Delegate
+    private final ElementImpl<TextInputElement> elementImpl;
 
     public TextInputElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public TextInputElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public TextInputElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public TextInputElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public void clear() {
         new WaitCondition() {
             public boolean isSatisfied() {
-                baseElement.locateElement().clear();
+                elementImpl.locateElement().clear();
                 return true;
             }
         }.waitUntilSatisfied();
@@ -47,7 +40,7 @@ public class TextInputElement implements Element {
         if (text == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                WebElement element = baseElement.locateElement();
+                WebElement element = elementImpl.locateElement();
                 element.clear();
                 element.sendKeys(text);
                 return true;
@@ -64,7 +57,7 @@ public class TextInputElement implements Element {
         if (key == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                WebElement element = baseElement.locateElement();
+                WebElement element = elementImpl.locateElement();
                 element.sendKeys(key);
                 return true;
             }
@@ -80,7 +73,7 @@ public class TextInputElement implements Element {
         if (key == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                WebElement element = baseElement.locateElement();
+                WebElement element = elementImpl.locateElement();
                 element.sendKeys(key);
                 return true;
             }
@@ -97,7 +90,7 @@ public class TextInputElement implements Element {
         if (text == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                baseElement.locateElement().sendKeys(text);
+                elementImpl.locateElement().sendKeys(text);
                 return true;
             }
         }.waitUntilSatisfied();
@@ -113,7 +106,7 @@ public class TextInputElement implements Element {
         if (text == null) return;
         new WaitCondition() {
             public boolean isSatisfied() {
-                baseElement.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_UP) + text);
+                elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_UP) + text);
                 return true;
             }
         }.waitUntilSatisfied();
@@ -123,7 +116,7 @@ public class TextInputElement implements Element {
     private void moveCursorToEndOfInput() {
         new WaitCondition() {
             public boolean isSatisfied() {
-                WebElement element = baseElement.locateElement();
+                WebElement element = elementImpl.locateElement();
                 element.sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_DOWN));
                 element.click();
                 return true;
@@ -150,11 +143,5 @@ public class TextInputElement implements Element {
                 }
             }
         }.setTimeout(TimeUnit.SECONDS, 1).waitAndIgnoreExceptions().isSuccessful();
-    }
-
-    @Override
-    public TextInputElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
     }
 }

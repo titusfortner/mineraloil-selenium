@@ -8,23 +8,15 @@ import org.openqa.selenium.By;
 import java.util.concurrent.TimeUnit;
 
 public class ImageElement implements Element {
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
+    @Delegate
+    private final ElementImpl<ImageElement> elementImpl;
 
     public ImageElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public ImageElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public ImageElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public ImageElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public String getImageSource() {
@@ -44,9 +36,4 @@ public class ImageElement implements Element {
         }.setTimeout(TimeUnit.SECONDS, 3).waitUntilSatisfied().getResult();
     }
 
-    @Override
-    public ImageElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
-    }
 }

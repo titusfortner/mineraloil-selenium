@@ -4,17 +4,8 @@ import com.lithium.mineraloil.selenium.helpers.BaseTest;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 
 public class BaseElementTest extends BaseTest {
-
-    @Test
-    public void elementShouldEqualTheSameElementAndItself() {
-        BaseElement div = new BaseElement(By.xpath("//div[@id='displayed_element']"));
-        BaseElement div2 = new BaseElement(By.xpath("//div[@id='displayed_element']"));
-        Assertions.assertThat(div).isEqualTo(div);
-        Assertions.assertThat(div).isEqualTo(div2);
-    }
 
     @Test
     public void constructorWithIndex() {
@@ -59,6 +50,6 @@ public class BaseElementTest extends BaseTest {
         BaseElement div = new BaseElement(By.xpath("//div[@id='iframe_div']"));
         BaseElement iframe = new BaseElement(By.xpath("//iframe"));
         Assertions.assertThat(div.isDisplayed()).isFalse();
-        Assertions.assertThat(div.registerIFrame(iframe).getText()).isEqualTo("Iframe Things!");
+        Assertions.assertThat(div.withIframe(iframe).getText()).isEqualTo("Iframe Things!");
     }
 }

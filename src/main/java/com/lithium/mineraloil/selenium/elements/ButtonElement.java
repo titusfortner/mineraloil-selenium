@@ -4,28 +4,16 @@ import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 
 public class ButtonElement implements Element {
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
+
+    @Delegate
+    private final ElementImpl<ButtonElement> elementImpl;
 
     public ButtonElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public ButtonElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
-    public ButtonElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public ButtonElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
-    }
-
-    @Override
-    public ButtonElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
-    }
 }

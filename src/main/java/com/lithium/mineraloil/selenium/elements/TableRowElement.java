@@ -4,25 +4,17 @@ import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 
 public class TableRowElement implements Element {
-
-    @Delegate(excludes = {IFrameActions.class})
-    private BaseElement baseElement;
     private ElementList<BaseElement> columns;
 
+    @Delegate
+    private final ElementImpl<TableRowElement> elementImpl;
+
     public TableRowElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public TableRowElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public TableRowElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public TableRowElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public ElementList<BaseElement> getColumns() {
@@ -36,9 +28,4 @@ public class TableRowElement implements Element {
         return getColumns().get(index);
     }
 
-    @Override
-    public TableRowElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
-    }
 }

@@ -6,38 +6,24 @@ import org.openqa.selenium.ElementNotVisibleException;
 
 public class RadioElement implements Element {
 
-    private interface RadioSelection {
-        boolean isSelected();
-    }
-
-    @Delegate(excludes = {IFrameActions.class, RadioSelection.class})
-    private final BaseElement baseElement;
+    @Delegate(excludes = {RadioSelection.class})
+    private final ElementImpl<RadioElement> elementImpl;
 
     public RadioElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public RadioElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
-    public RadioElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public RadioElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+    private interface RadioSelection {
+        boolean isSelected();
     }
 
     public void select() {
         if (isDisabled()) throw new ElementNotVisibleException("RadioElement is disabled and not selectable.");
         click();
-    }
-
-    @Override
-    public RadioElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
     }
 
     @Override

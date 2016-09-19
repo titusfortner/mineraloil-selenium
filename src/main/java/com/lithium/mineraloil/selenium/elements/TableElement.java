@@ -14,26 +14,18 @@ import java.util.stream.Collectors;
 
 
 public class TableElement implements Element {
-
-    @Delegate(excludes = {IFrameActions.class})
-    private final BaseElement baseElement;
     private ElementList<TableRowElement> rows;
     private TableRowElement header;
 
+    @Delegate
+    private final ElementImpl<TableElement> elementImpl;
+
     public TableElement(By by) {
-        baseElement = new BaseElement(by);
+        elementImpl = new ElementImpl(this, by);
     }
 
     public TableElement(By by, int index) {
-        baseElement = new BaseElement(by, index);
-    }
-
-    public TableElement(Element parentElement, By by) {
-        baseElement = new BaseElement(parentElement, by);
-    }
-
-    public TableElement(Element parentElement, By by, int index) {
-        baseElement = new BaseElement(parentElement, by, index);
+        elementImpl = new ElementImpl(this, by, index);
     }
 
     public int size() {
@@ -75,9 +67,4 @@ public class TableElement implements Element {
         return listHash;
     }
 
-    @Override
-    public TableElement registerIFrame(Element iframeElement) {
-        baseElement.registerIFrame(iframeElement);
-        return this;
-    }
 }
