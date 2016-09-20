@@ -95,8 +95,9 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     }
 
     private T handlePossibleIFrameElement(T elementToReturn) {
-        return (T) elementToReturn.withIframe(iframeElement)
-                                  .withParent(parentElement)
-                                  .withAutoScrollIntoView();
+        T element = (T) elementToReturn.withIframe(iframeElement)
+                                       .withParent(parentElement);
+        if (autoScrollIntoView) element.withAutoScrollIntoView();
+        return element;
     }
 }
