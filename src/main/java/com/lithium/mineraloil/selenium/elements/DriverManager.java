@@ -59,6 +59,13 @@ public enum DriverManager {
         log.info("User Agent: " + getUserAgent());
     }
 
+    public void useDriver(WebDriver driver) {
+       Preconditions.checkNotNull(driver);    
+       DriverInstance driverInstance = new DriverInstance(driver);
+       drivers.push(driverInstance);
+       log.info("User Agent: " + getUserAgent());
+    }
+
     public void stopDriver() {
         DriverInstance driverInstance = drivers.pop();
         log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", drivers.size()));

@@ -17,6 +17,10 @@ class DriverInstance {
         this.driverConfiguration = driverConfiguration;
         startWebDriver(driverConfiguration);
     }
+    
+    public DriverInstance(WebDriver driver) {
+        this.driver=driver;
+    }
 
     private void startWebDriver(DriverConfiguration driverConfiguration) {
         switch (driverConfiguration.getBrowserType()) {

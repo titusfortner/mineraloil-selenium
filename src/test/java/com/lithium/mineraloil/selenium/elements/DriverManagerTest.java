@@ -79,4 +79,11 @@ public class DriverManagerTest {
         Assertions.assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(1);
         Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
     }
+
+    @Test
+    public void useWebDriverInstance() {
+        ChromeDriver chromeDriver = new ChromeDriver();
+        DriverManager.INSTANCE.useDriver(chromeDriver);
+        Assertions.assertThat(DriverManager.INSTANCE.getDriver().equals(chromeDriver));
+    }
 }
