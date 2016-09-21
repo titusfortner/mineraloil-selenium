@@ -83,8 +83,12 @@ public class DriverManagerTest {
 
     @Test
     public void useWebDriverInstance() {
+        String executable = getClass().getClassLoader().getResource("chromedriver").getPath();
+        System.setProperty("webdriver.chrome.driver", executable);
+
         ChromeDriver chromeDriver = new ChromeDriver();
         DriverManager.INSTANCE.useDriver(chromeDriver);
         Assertions.assertThat(DriverManager.INSTANCE.getDriver().equals(chromeDriver));
     }
+
 }
