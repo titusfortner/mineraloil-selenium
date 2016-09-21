@@ -9,9 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.chrome.ChromeDriver;
-
-import java.io.File;
 
 
 public class DriverManagerTest {
@@ -82,17 +79,4 @@ public class DriverManagerTest {
         Assertions.assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(1);
         Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
     }
-
-    @Test
-    public void useWebDriverInstance() {
-        String executable = getClass().getClassLoader().getResource("chromedriver").getPath();
-        File file = new File(executable);
-        file.setExecutable(true, false);
-        System.setProperty("webdriver.chrome.driver", executable);
-
-        ChromeDriver chromeDriver = new ChromeDriver(BrowserHelper.getDriverConfiguration().getChromeDesiredCapabilities());
-        DriverManager.INSTANCE.useDriver(chromeDriver);
-        Assertions.assertThat(DriverManager.INSTANCE.getDriver().equals(chromeDriver));
-    }
-
 }
