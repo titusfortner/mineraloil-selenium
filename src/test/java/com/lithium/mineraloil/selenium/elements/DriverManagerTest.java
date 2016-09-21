@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.io.File;
+
 
 public class DriverManagerTest {
     private static DriverConfiguration chromeConfig;
@@ -84,6 +86,8 @@ public class DriverManagerTest {
     @Test
     public void useWebDriverInstance() {
         String executable = getClass().getClassLoader().getResource("chromedriver").getPath();
+        File file = new File(executable);
+        file.setExecutable(true, false);
         System.setProperty("webdriver.chrome.driver", executable);
 
         ChromeDriver chromeDriver = new ChromeDriver();
