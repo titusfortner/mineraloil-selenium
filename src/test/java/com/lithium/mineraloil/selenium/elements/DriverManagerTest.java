@@ -2,13 +2,15 @@ package com.lithium.mineraloil.selenium.elements;
 
 
 import com.lithium.mineraloil.selenium.helpers.BrowserHelper;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class DriverManagerTest {
@@ -36,47 +38,66 @@ public class DriverManagerTest {
 
     @Test
     public void startDriver() {
-        Assertions.assertThat(DriverManager.INSTANCE.isDriverStarted()).isTrue();
+        assertThat(DriverManager.INSTANCE.isDriverStarted()).isTrue();
     }
 
     @Test
     public void getUrl() {
-        Assertions.assertThat(DriverManager.INSTANCE.getTitle()).isEqualTo("Test");
-        Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
+        assertThat(DriverManager.INSTANCE.getTitle()).isEqualTo("Test");
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
     }
 
     @Ignore //Alerts are not currently working
     @Test
     public void clickAlertButton() {
         DriverManager.INSTANCE.getDriver().findElement(By.xpath("//button[@id='alert_button']")).click();
-        Assertions.assertThat(DriverManager.INSTANCE.isAlertPresent()).isTrue();
-        Assertions.assertThat(DriverManager.INSTANCE.getAlertText()).isEqualTo("Alert Now");
+        assertThat(DriverManager.INSTANCE.isAlertPresent()).isTrue();
+        assertThat(DriverManager.INSTANCE.getAlertText()).isEqualTo("Alert Now");
         DriverManager.INSTANCE.acceptAlert();
-        Assertions.assertThat(DriverManager.INSTANCE.isAlertPresent()).isFalse();
+        assertThat(DriverManager.INSTANCE.isAlertPresent()).isFalse();
     }
 
     @Test
     public void openMultipleWindows() {
         DriverManager.INSTANCE.getDriver().findElement(By.xpath("//a[@id='new_tab_link']")).click();
-        Assertions.assertThat(DriverManager.INSTANCE.getWindowHandles().size()).isEqualTo(2);
+        assertThat(DriverManager.INSTANCE.getWindowHandles().size()).isEqualTo(2);
         DriverManager.INSTANCE.switchWindow();
         DriverManager.INSTANCE.get(GOOGLE_URL);
-        Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).contains(GOOGLE_URL);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).contains(GOOGLE_URL);
         DriverManager.INSTANCE.closeWindow();
-        Assertions.assertThat(DriverManager.INSTANCE.getWindowHandles().size()).isEqualTo(1);
-        Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
+        assertThat(DriverManager.INSTANCE.getWindowHandles().size()).isEqualTo(1);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
     }
 
     @Test
     public void openMultipleBrowserWindows() {
         DriverManager.INSTANCE.startDriver();
         DriverManager.INSTANCE.get(testUrl);
-        Assertions.assertThat(DriverManager.INSTANCE.getTitle()).isEqualTo("Test");
+        assertThat(DriverManager.INSTANCE.getTitle()).isEqualTo("Test");
         DriverManager.INSTANCE.get(GOOGLE_URL);
-        Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).contains(GOOGLE_URL);
-        Assertions.assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(2);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).contains(GOOGLE_URL);
+        assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(2);
         DriverManager.INSTANCE.stopDriver();
-        Assertions.assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(1);
-        Assertions.assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
+        assertThat(DriverManager.INSTANCE.getNumberOfDrivers()).isEqualTo(1);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
+    }
+
+    @Test
+    public void useMultipleDrivers() {
+        DriverManager.INSTANCE.startDriver();
+        DriverManager.INSTANCE.get(GOOGLE_URL);
+
+        DriverManager.INSTANCE.switchDriver(0);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).isEqualTo(testUrl);
+
+        DriverManager.INSTANCE.switchDriver(1);
+        assertThat(DriverManager.INSTANCE.getCurrentUrl()).contains(GOOGLE_URL);
+
+    }
+
+    @Test
+    public void makeSureIndexInBounds() {
+        assertThatThrownBy(()->DriverManager.INSTANCE.switchDriver(1)).isInstanceOf(IllegalArgumentException.class);
+
     }
 }

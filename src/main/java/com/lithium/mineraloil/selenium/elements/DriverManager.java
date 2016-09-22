@@ -21,13 +21,15 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
 @Slf4j
 public enum DriverManager {
     INSTANCE;
+
+    private int activeDriverIndex = 0;
 
     DriverManager() {
         WaiterImpl.addExpectedException(StaleElementReferenceException.class);
@@ -39,7 +41,7 @@ public enum DriverManager {
 
     @Setter
     private DriverConfiguration driverConfiguration;
-    private Stack<DriverInstance> drivers = new Stack<>();
+    private LinkedList<DriverInstance> drivers = new LinkedList<>();
     private Set<PageLoadWaiter> pageLoadWaiters = new HashSet<>();
 
     @Delegate
@@ -55,22 +57,29 @@ public enum DriverManager {
     public void startDriver() {
         Preconditions.checkNotNull(driverConfiguration);
         DriverInstance driverInstance = new DriverInstance(driverConfiguration);
-        drivers.push(driverInstance);
+        drivers.add(driverInstance);
+        resetActiveDriverIndex();
         log.info("User Agent: " + getUserAgent());
     }
 
     public void useDriver(WebDriver driver) {
-       Preconditions.checkNotNull(driver);    
-       DriverInstance driverInstance = new DriverInstance(driver);
-       drivers.push(driverInstance);
-       log.info("User Agent: " + getUserAgent());
+        Preconditions.checkNotNull(driver);
+        DriverInstance driverInstance = new DriverInstance(driver);
+        drivers.add(driverInstance);
+        resetActiveDriverIndex();
+        log.info("User Agent: " + getUserAgent());
     }
 
     public void stopDriver() {
-        DriverInstance driverInstance = drivers.pop();
+        DriverInstance driverInstance = drivers.removeLast();
         log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", drivers.size()));
         driverInstance.getDriver().quit();
-        if (isDriverStarted()) switchWindow();
+        resetActiveDriverIndex();
+        if (isDriverStarted()) {
+            switchWindow();
+        } else {
+            activeDriverIndex = 0;
+        }
     }
 
     public int getNumberOfDrivers() {
@@ -93,13 +102,19 @@ public enum DriverManager {
     // package private so we don't leak this outside of the abstraction
     WebDriver getDriver() {
         if (!isDriverStarted()) throw new DriverNotFoundException("Unable to locate a started WebDriver instance");
-        return drivers.peek().getDriver();
+        return drivers.get(activeDriverIndex).getDriver();
     }
 
     // switches to the last opened window
     public void switchWindow() {
         List<String> windowHandles = new ArrayList<>(getWindowHandles());
         getDriver().switchTo().window(windowHandles.get(windowHandles.size() - 1));
+    }
+
+    // selects active driver
+    public void switchDriver(int index) {
+        Preconditions.checkArgument(index < drivers.size());
+        this.activeDriverIndex = index;
     }
 
     // closes the last opened window
@@ -112,7 +127,7 @@ public enum DriverManager {
     }
 
     public void stopAllDrivers() {
-        while (!drivers.empty()) {
+        while (isDriverStarted()) {
             try {
                 stopDriver();
             } catch (WebDriverException e) {
@@ -126,7 +141,7 @@ public enum DriverManager {
     }
 
     public boolean isDriverStarted() {
-        return !drivers.empty();
+        return drivers.size() > 0;
     }
 
     public void addPageLoadWaiter(PageLoadWaiter pageLoadWaiter) {
@@ -153,5 +168,9 @@ public enum DriverManager {
         log.info("Console Log output: ");
         DriverManager.INSTANCE.executeScript("console.log('Logging Errors');");
         return DriverManager.INSTANCE.getDriver().manage().logs().get(LogType.BROWSER);
+    }
+
+    private void resetActiveDriverIndex() {
+        activeDriverIndex = drivers.size() - 1;
     }
 }
