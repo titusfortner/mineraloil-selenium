@@ -14,6 +14,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     private Class className;
     private Element<T> parentElement;
     private Element<T> iframeElement;
+    private Element<T> hoverElement;
     private boolean autoScrollIntoView;
 
     public ElementList(By by, Class className) {
@@ -72,8 +73,13 @@ public class ElementList<T extends Element> extends AbstractList<T> {
         return this;
     }
 
+    public ElementList<T> withHover(Element hoverElement) {
+        this.hoverElement = hoverElement;
+        return this;
+    }
+
     public ElementList<T> withAutoScrollIntoView() {
-        this.autoScrollIntoView = true;
+        autoScrollIntoView = true;
         return this;
     }
 
@@ -96,7 +102,8 @@ public class ElementList<T extends Element> extends AbstractList<T> {
 
     private T handlePossibleIFrameElement(T elementToReturn) {
         T element = (T) elementToReturn.withIframe(iframeElement)
-                                       .withParent(parentElement);
+                                       .withParent(parentElement)
+                                       .withHover(hoverElement);
         if (autoScrollIntoView) element.withAutoScrollIntoView();
         return element;
     }
