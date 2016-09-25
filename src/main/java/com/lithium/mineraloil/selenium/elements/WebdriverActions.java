@@ -118,6 +118,10 @@ public class WebdriverActions {
         return ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
     }
 
+    public WebDriver.Window getWindow() {
+        return driver.manage().window();
+    }
+
     public void maximize() {
         // chrome doesn't actually always maximize so implement workaround
         if (driver instanceof ChromeDriver) {
