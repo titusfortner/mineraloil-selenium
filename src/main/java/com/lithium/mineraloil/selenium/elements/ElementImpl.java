@@ -91,27 +91,18 @@ class ElementImpl<T extends Element> implements Element<T> {
         }
 
         if (parentElement != null) {
-            By xpathBy = by;
+            By parentBy = by;
             if (by instanceof ByXPath) {
-                /*
-                Allows users to be able to do a complete node search within its parent without adding .// before
-                Example:
-                    parent.createBaseElement("//div[@id='testId']");
-                    parent.createBaseElement(".//div[@id='testId']");
-
-                Both examples will now search within the parent.
-                 */
-                String xpath = by.toString().replace("By.xpath: ", "").replaceFirst("^.?//", ".//");
-                xpathBy = By.xpath(xpath);
+                parentBy = getByForParentElement(by);
             }
             if (index >= 0) {
-                List<WebElement> elements = parentElement.locateElement().findElements(xpathBy);
+                List<WebElement> elements = parentElement.locateElement().findElements(parentBy);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = parentElement.locateElement().findElement(xpathBy);
+                webElement = parentElement.locateElement().findElement(parentBy);
             }
         } else {
             if (index >= 0) {
@@ -488,7 +479,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         final WebElement element = locateElement();
         String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
-        for(int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20; i++) {
             String bgColor = (i % 2 == 0) ? "red" : elementColor;
             DriverManager.INSTANCE.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
         }
@@ -563,6 +554,20 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     private void scrollElement(WebElement webElement) {
         DriverManager.INSTANCE.executeScript("arguments[0].scrollIntoView(true);", webElement);
+    }
+
+    /*
+    Allows users to be able to do a complete node search within its parent without
+    having to always remember to add .// before the xpath
+    Example:
+          parent.createBaseElement("//div[@id='testId']");
+          parent.createBaseElement(".//div[@id='testId']");
+
+    Both examples will now search within the parent.
+    */
+    public static By getByForParentElement(By by) {
+        String xpath = by.toString().replace("By.xpath: ", "").replaceFirst("^.?//", ".//");
+        return By.xpath(xpath);
     }
 
 }

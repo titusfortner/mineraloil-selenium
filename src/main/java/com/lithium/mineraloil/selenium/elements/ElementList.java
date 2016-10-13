@@ -86,7 +86,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     private List<WebElement> getElements() {
         handlePossibleIFrame();
         if (parentElement != null) {
-            return parentElement.locateElement().findElements(by);
+            return parentElement.locateElement().findElements(ElementImpl.getByForParentElement(by));
         } else {
             return DriverManager.INSTANCE.getDriver().findElements(by);
         }
