@@ -566,8 +566,11 @@ class ElementImpl<T extends Element> implements Element<T> {
     Both examples will now search within the parent.
     */
     public static By getByForParentElement(By by) {
-        String xpath = by.toString().replace("By.xpath: ", "").replaceFirst("^.?//", ".//");
-        return By.xpath(xpath);
+        if (by instanceof ByXPath) {
+            String xpath = by.toString().replace("By.xpath: ", "").replaceFirst("^.?//", ".//");
+            return By.xpath(xpath);
+        }
+        return by;
     }
 
 }
