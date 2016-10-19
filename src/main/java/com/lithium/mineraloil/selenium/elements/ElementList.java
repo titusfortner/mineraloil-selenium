@@ -51,6 +51,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
     public T get(int index) {
         String errorMessage = String.format("Unable to get %s item from collection of %s", index, className);
         try {
+            if (hoverElement != null) hoverElement.hover();
             return handlePossibleIFrameElement((T) className.getDeclaredConstructor(By.class, int.class).newInstance(by, index));
         } catch (InstantiationException e) {
             throw new ElementListException(errorMessage);
@@ -85,6 +86,7 @@ public class ElementList<T extends Element> extends AbstractList<T> {
 
     private List<WebElement> getElements() {
         handlePossibleIFrame();
+        if (hoverElement != null) hoverElement.hover();
         if (parentElement != null) {
             return parentElement.locateElement().findElements(ElementImpl.getByForParentElement(by));
         } else {
