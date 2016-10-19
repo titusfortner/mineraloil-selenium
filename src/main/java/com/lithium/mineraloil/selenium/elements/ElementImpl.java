@@ -76,7 +76,7 @@ class ElementImpl<T extends Element> implements Element<T> {
             switchFocusFromIFrame();
         }
 
-        if (hoverElement != null) hoverElement.hover();
+        if (hoverElement != null && hoverElement.isDisplayed()) hoverElement.hover();
 
         // cache element
         if (webElement != null) {
