@@ -1,20 +1,15 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.google.common.base.Preconditions;
+import com.jayway.awaitility.core.ConditionTimeoutException;
 import com.lithium.mineraloil.selenium.browsers.PageLoadWaiter;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import com.lithium.mineraloil.selenium.exceptions.PageLoadWaiterTimeoutException;
-import com.lithium.mineraloil.waiters.WaitCondition;
-import com.lithium.mineraloil.waiters.WaiterImpl;
 import lombok.Setter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.interactions.MoveTargetOutOfBoundsException;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -30,14 +25,6 @@ public enum DriverManager {
     INSTANCE;
 
     private int activeDriverIndex = 0;
-
-    DriverManager() {
-        WaiterImpl.addExpectedException(StaleElementReferenceException.class);
-        WaiterImpl.addExpectedException(NoSuchElementException.class);
-        WaiterImpl.addExpectedException(ElementNotVisibleException.class);
-        WaiterImpl.addExpectedException(WebDriverException.class);
-        WaiterImpl.addExpectedException(MoveTargetOutOfBoundsException.class);
-    }
 
     @Setter
     private DriverConfiguration driverConfiguration;
@@ -153,14 +140,14 @@ public enum DriverManager {
             String callerClass = pageLoadWaiter.getClass().getEnclosingClass().getName();
             String callerPackage = pageLoadWaiter.getClass().getEnclosingClass().getPackage().getName();
             String exceptionMessage = String.format("Timed out in PageLoadWaiter: package '%s', class '%s'", callerPackage, callerClass);
-            new WaitCondition() {
-                @Override
-                public boolean isSatisfied() {
-                    return pageLoadWaiter.isSatisfied();
-                }
-            }.setTimeout(pageLoadWaiter.getTimeUnit(), pageLoadWaiter.getTimeout())
-             .throwExceptionOnFailure(new PageLoadWaiterTimeoutException(exceptionMessage))
-             .waitUntilSatisfied();
+
+            try {
+                Waiter.await()
+                      .atMost(pageLoadWaiter.getTimeout(), pageLoadWaiter.getTimeUnit())
+                      .until(() -> pageLoadWaiter.isSatisfied());
+            } catch (ConditionTimeoutException e) {
+                throw new PageLoadWaiterTimeoutException(exceptionMessage);
+            }
         }
     }
 
@@ -173,4 +160,5 @@ public enum DriverManager {
     private void resetActiveDriverIndex() {
         activeDriverIndex = drivers.size() - 1;
     }
+
 }

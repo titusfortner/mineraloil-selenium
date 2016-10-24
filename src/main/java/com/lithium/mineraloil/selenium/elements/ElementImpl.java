@@ -1,7 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.lithium.mineraloil.waiters.WaitCondition;
-import com.lithium.mineraloil.waiters.WaitExpiredException;
+import com.jayway.awaitility.core.ConditionTimeoutException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,17 +13,14 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 @Slf4j
 class ElementImpl<T extends Element> implements Element<T> {
-    public static final int STALE_ELEMENT_WAIT_MS = 200;
-    public static final int ELEMENT_ATTRIBUTE_WAIT_MS = 500;
-    public static final int JS_EVENT_WAIT_MS = 500;
-    public static final int FOCUS_WAIT_S = 1;
-    public static final int DISPLAY_WAIT_S = 20;
     private int index = -1;
     private Element referenceElement;
     private boolean scrollIntoView = false;
@@ -58,6 +54,28 @@ class ElementImpl<T extends Element> implements Element<T> {
         this.parentElement = parentElement;
         this.by = by;
         this.index = index;
+    }
+
+
+    @Override
+    public WebElement locateElement(long waitTime, TimeUnit timeUnit) {
+        try {
+            if (timeUnit.equals(MILLISECONDS) && waitTime <= 100) {
+                // handle when poll interval is less than awaitility default of 100MS
+                Waiter.await()
+                      .atMost(waitTime, MILLISECONDS)
+                      .pollInterval(10, MILLISECONDS)
+                      .until(() -> locateElement() != null);
+            } else {
+                Waiter.await()
+                      .atMost(waitTime, timeUnit)
+                      .pollInterval(100, MILLISECONDS)
+                      .until(() -> locateElement() != null);
+            }
+        } catch (Exception e) {
+            throw new ConditionTimeoutException("Unable to locate element using by: " + getBy());
+        }
+        return locateElement();
     }
 
     @Override
@@ -139,12 +157,8 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void clickNoHover() {
-        new WaitCondition() {
-            public boolean isSatisfied() {
-                locateElement().click();
-                return true;
-            }
-        }.waitUntilSatisfied();
+        waitUntilDisplayed();
+        locateElement().click();
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
@@ -152,63 +166,38 @@ class ElementImpl<T extends Element> implements Element<T> {
     public String getAttribute(final String name) {
         log.debug("BaseElement: getting attribute: " + name);
         try {
-            return (String) new WaitCondition() {
-                public boolean isSatisfied() {
-                    setResult(locateElement().getAttribute(name));
-                    return true;
-                }
-            }.setTimeout(TimeUnit.MILLISECONDS, ELEMENT_ATTRIBUTE_WAIT_MS).waitUntilSatisfied().getResult();
-        } catch (WaitExpiredException e) {
+            return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getAttribute(name); // may not be displayed
+        } catch (ConditionTimeoutException e) {
             return "";
         }
     }
 
     @Override
     public String getTagName() {
-        return (String) new WaitCondition() {
-            public boolean isSatisfied() {
-                if (isDisplayed()) {
-                    setResult(locateElement().getTagName());
-                }
-                return getResult() != null;
-            }
-        }.setTimeout(TimeUnit.MILLISECONDS, STALE_ELEMENT_WAIT_MS).waitUntilSatisfied().getResult();
+        return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getTagName(); // may not be displayed
     }
 
     @Override
     public String getCssValue(final String name) {
         log.debug("BaseElement: getting css value: " + name);
         try {
-            return (String) new WaitCondition() {
-                public boolean isSatisfied() {
-                    setResult(locateElement().getCssValue(name));
-                    return true;
-
-                }
-            }.setTimeout(TimeUnit.MILLISECONDS, ELEMENT_ATTRIBUTE_WAIT_MS).waitUntilSatisfied().getResult();
-        } catch (WaitExpiredException e) {
+            return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getCssValue(name); // may not be displayed
+        } catch (ConditionTimeoutException e) {
             return "";
         }
     }
 
     @Override
     public String getText() {
-        return (String) new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                if (isDisplayed()) {
-                    setResult(locateElement().getText());
-                }
-                return getResult() != null;
-            }
-        }.waitUntilSatisfied().getResult();
+        waitUntilDisplayed();
+        return locateElement().getText();
     }
 
     @Override
     public boolean isInDOM() {
         try {
-            waitUntilExists();
-        } catch (WaitExpiredException e) {
+            locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS); // may not be displayed
+        } catch (ConditionTimeoutException e) {
             return false;
         }
         return true;
@@ -217,18 +206,17 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public boolean isDisplayed() {
         try {
-            waitUntilDisplayed(TimeUnit.MILLISECONDS, STALE_ELEMENT_WAIT_MS);
-        } catch (WaitExpiredException e) {
+            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS) != null;
+        } catch (ConditionTimeoutException e) {
             return false;
         }
-        return true;
     }
 
     @Override
     public boolean isEnabled() {
         try {
-            waitUntilEnabled(TimeUnit.MILLISECONDS, STALE_ELEMENT_WAIT_MS);
-        } catch (WaitExpiredException e) {
+            waitUntilEnabled(MILLISECONDS, Waiter.STALE_ELEMENT_WAIT_MS);
+        } catch (ConditionTimeoutException e) {
             return false;
         }
         return true;
@@ -240,80 +228,49 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilDisplayed() {
-        waitUntilDisplayed(TimeUnit.SECONDS, DISPLAY_WAIT_S);
+        waitUntilDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
     }
 
     @Override
-    public void waitUntilDisplayed(TimeUnit timeUnit, final int seconds) {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                return locateElement().isDisplayed();
-            }
-        }.setTimeout(timeUnit, seconds).waitUntilSatisfied();
+    public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
+        locateElement(waitTime, timeUnit).isDisplayed();
     }
 
     @Override
     public void waitUntilNotDisplayed() {
-        waitUntilNotDisplayed(TimeUnit.SECONDS, DISPLAY_WAIT_S);
+        waitUntilNotDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
     }
 
     @Override
-    public void waitUntilNotDisplayed(TimeUnit timeUnit, final int seconds) {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                // The element could not exist in the DOM or be in the DOM and not be visible
-                WebElement webElement;
-                try {
-                    // If the element is not in the DOM, Selenium will throw a NoSuchElementException
-                    webElement = locateElement();
-                } catch (NoSuchElementException e) {
-                    return true;
-                }
-                return !webElement.isDisplayed();
+    public void waitUntilNotDisplayed(TimeUnit timeUnit, final int waitTime) {
+        Waiter.await().atMost(waitTime, timeUnit).until(() -> {
+            try {
+                // If the element is not in the DOM, Selenium will throw a NoSuchElementException
+                return !locateElement().isDisplayed();
+            } catch (NoSuchElementException e) {
+                return true;
             }
-        }.setTimeout(timeUnit, seconds).waitUntilSatisfied();
+        });
     }
 
     @Override
     public void waitUntilEnabled() {
-        waitUntilEnabled(TimeUnit.SECONDS, DISPLAY_WAIT_S);
+        waitUntilEnabled(SECONDS, Waiter.DISPLAY_WAIT_S);
     }
 
     @Override
-    public void waitUntilEnabled(TimeUnit timeUnit, final int seconds) {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                return !isDisplayed() && locateElement().isEnabled();
-            }
-        }.setTimeout(timeUnit, seconds).waitUntilSatisfied();
+    public void waitUntilEnabled(TimeUnit timeUnit, final int timeout) {
+        Waiter.await().atMost(timeout, timeUnit).until(() -> locateElement().isDisplayed() && locateElement().isEnabled());
     }
-
-    private void waitUntilExists() {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                return locateElement() != null;
-            }
-        }.setTimeout(TimeUnit.MILLISECONDS, STALE_ELEMENT_WAIT_MS).waitUntilSatisfied();
-    }
-
 
     @Override
     public void waitUntilNotEnabled() {
-        waitUntilNotDisplayed(TimeUnit.SECONDS, DISPLAY_WAIT_S);
+        waitUntilNotDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
     }
 
     @Override
-    public void waitUntilNotEnabled(final TimeUnit timeUnit, final int seconds) {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                return isDisplayed() || !locateElement().isEnabled();
-            }
-        }.setTimeout(timeUnit, seconds).waitUntilSatisfied();
+    public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
+        Waiter.await().atMost(timeout, timeUnit).until(() -> !locateElement().isDisplayed() || !locateElement().isEnabled());
     }
 
     @Override
@@ -321,37 +278,37 @@ class ElementImpl<T extends Element> implements Element<T> {
         waitUntilDisplayed();
         final Actions hoverHandler = DriverManager.INSTANCE.getActions();
         final WebElement element = locateElement();
-        new WaitCondition() {
-            public boolean isSatisfied() {
+
+        try {
+            Waiter.await().atMost(Waiter.INTERACT_WAIT_S, SECONDS).ignoreExceptions().until(() -> {
                 hoverHandler.moveToElement(element).perform();
                 return true;
-            }
-        }.setTimeout(TimeUnit.SECONDS, 3).waitAndIgnoreExceptions();
+            });
+        } catch (ConditionTimeoutException e) {
+            // ignore, best effort retry
+        }
     }
 
     @Override
     public void sendKeys(final Keys... keys) {
-        log.debug("BaseElement: sending " + Arrays.toString(keys));
-        new WaitCondition() {
-            public boolean isSatisfied() {
-                WebElement element = locateElement();
-                element.sendKeys(keys);
-                return true;
-            }
-        }.waitUntilSatisfied();
+        waitUntilDisplayed();
+        locateElement().sendKeys(keys);
     }
 
     @Override
     public boolean isSelected() {
-        return new WaitCondition() {
-            public boolean isSatisfied() {
-                return locateElement().isSelected();
-            }
-        }.setTimeout(TimeUnit.MILLISECONDS, STALE_ELEMENT_WAIT_MS).waitAndIgnoreExceptions().isSuccessful();
+        waitUntilDisplayed();
+        try {
+            Waiter.await().atMost(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).until(() -> locateElement().isSelected());
+            return true;
+        } catch (ConditionTimeoutException e) {
+            return false;
+        }
     }
 
     @Override
     public void scrollIntoView() {
+        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS); // may not be displayed
         scrollElement(locateElement());
     }
 
@@ -462,20 +419,25 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public boolean isFocused() {
-        return new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement());
-            }
-        }.setTimeout(TimeUnit.SECONDS, FOCUS_WAIT_S).waitAndIgnoreExceptions().isSuccessful();
+        waitUntilDisplayed();
+        try {
+            Waiter.await().atMost(Waiter.INTERACT_WAIT_S, SECONDS)
+                  .ignoreExceptions()
+                  .until(() -> DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement()));
+            return true;
+        } catch (ConditionTimeoutException e) {
+            return false;
+        }
     }
 
     @Override
     public void focus() {
+        waitUntilDisplayed();
         DriverManager.INSTANCE.getActions().moveToElement(locateElement()).perform();
     }
 
     public void flash() {
+        waitUntilDisplayed();
         final WebElement element = locateElement();
         String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
@@ -499,19 +461,10 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     public void fireEvent(String eventName) {
-        new WaitCondition() {
-            @Override
-            public boolean isSatisfied() {
-                dispatchJSEvent(locateElement(), eventName, true, true);
-
-                try {
-                    TimeUnit.MILLISECONDS.sleep(JS_EVENT_WAIT_MS);
-                } catch (Exception e) {
-                    log.info("Unable to wait for JS event to fire");
-                }
-                return true;
-            }
-        }.waitUntilSatisfied();
+        Waiter.await().atMost(Waiter.DISPLAY_WAIT_S, SECONDS)
+              .pollInterval(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS)
+              .ignoreExceptions()
+              .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
     }
 
     private boolean isWithinIFrame() {
@@ -555,6 +508,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     private void scrollElement(WebElement webElement) {
         DriverManager.INSTANCE.executeScript("arguments[0].scrollIntoView(true);", webElement);
     }
+
 
     /*
     Allows users to be able to do a complete node search within its parent without

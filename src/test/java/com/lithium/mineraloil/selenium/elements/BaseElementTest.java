@@ -1,9 +1,10 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.helpers.BaseTest;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.openqa.selenium.By;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BaseElementTest extends BaseTest {
 
@@ -52,4 +53,14 @@ public class BaseElementTest extends BaseTest {
         assertThat(div.isDisplayed()).isFalse();
         assertThat(div.withIframe(iframe).getText()).isEqualTo("Iframe Things!");
     }
+
+    @Test
+    public void check() {
+        CheckboxElement checkboxElement = new CheckboxElement(By.xpath("//input[@type='checkbox']"));
+        checkboxElement.check();
+        assertThat(checkboxElement.isChecked()).isTrue();
+        checkboxElement.uncheck();
+        assertThat(checkboxElement.isChecked()).isFalse();
+    }
+
 }

@@ -1,9 +1,9 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.lithium.mineraloil.waiters.WaitCondition;
 import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class FileUploadElement implements Element {
     @Delegate
@@ -19,12 +19,6 @@ public class FileUploadElement implements Element {
 
     public void type(final String text) {
         if (text == null) return;
-        new WaitCondition() {
-            public boolean isSatisfied() {
-                WebElement element = elementImpl.locateElement();
-                element.sendKeys(text);
-                return true;
-            }
-        }.waitUntilSatisfied();
+        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(text);
     }
 }

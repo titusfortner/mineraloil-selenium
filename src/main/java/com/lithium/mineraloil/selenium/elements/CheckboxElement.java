@@ -1,6 +1,5 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.lithium.mineraloil.waiters.WaitCondition;
 import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 
@@ -18,15 +17,7 @@ public class CheckboxElement implements Element {
     }
 
     public void check() {
-        if (!isChecked()) {
-            new WaitCondition() {
-                @Override
-                public boolean isSatisfied() {
-                    elementImpl.click();
-                    return isChecked();
-                }
-            }.waitUntilSatisfied();
-        }
+        if (!isChecked()) elementImpl.click();
     }
 
     public boolean isChecked() {
@@ -34,15 +25,7 @@ public class CheckboxElement implements Element {
     }
 
     public void uncheck() {
-        if (isChecked()) {
-            new WaitCondition() {
-                @Override
-                public boolean isSatisfied() {
-                    elementImpl.click();
-                    return !isChecked();
-                }
-            }.waitUntilSatisfied();
-        }
+        if (isChecked()) elementImpl.click();
     }
 
     public void set(boolean value) {
