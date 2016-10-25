@@ -233,7 +233,9 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
-        locateElement(waitTime, timeUnit).isDisplayed();
+        if (!locateElement(waitTime, timeUnit).isDisplayed()) {
+            throw new ConditionTimeoutException("Unable to wait for element using: " + getBy());
+        }
     }
 
     @Override
