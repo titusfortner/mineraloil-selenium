@@ -206,7 +206,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public boolean isDisplayed() {
         try {
-            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS) != null;
+            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).isDisplayed();
         } catch (ConditionTimeoutException e) {
             return false;
         }
