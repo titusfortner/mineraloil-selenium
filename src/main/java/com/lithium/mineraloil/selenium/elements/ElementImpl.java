@@ -197,7 +197,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isInDOM() {
         try {
             locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS); // may not be displayed
-        } catch (ConditionTimeoutException e) {
+        } catch (ConditionTimeoutException | NoSuchElementException e) {
             return false;
         }
         return true;
@@ -207,7 +207,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isDisplayed() {
         try {
             return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).isDisplayed();
-        } catch (ConditionTimeoutException e) {
+        } catch (ConditionTimeoutException | NoSuchElementException e) {
             return false;
         }
     }
@@ -216,7 +216,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isEnabled() {
         try {
             waitUntilEnabled(MILLISECONDS, Waiter.STALE_ELEMENT_WAIT_MS);
-        } catch (ConditionTimeoutException e) {
+        } catch (ConditionTimeoutException | NoSuchElementException e) {
             return false;
         }
         return true;
