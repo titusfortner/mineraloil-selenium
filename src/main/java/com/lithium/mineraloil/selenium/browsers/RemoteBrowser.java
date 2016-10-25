@@ -2,7 +2,6 @@ package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Throwables;
 import com.jayway.awaitility.core.ConditionTimeoutException;
-import com.lithium.mineraloil.selenium.elements.Waiter;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
@@ -17,6 +16,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -36,10 +36,10 @@ abstract class RemoteBrowser implements Browser {
         }
 
         try {
-            Waiter.await()
-                  .atMost(5, MINUTES)
-                  .pollInterval(1, SECONDS)
-                  .until(() -> getDriverInThread() != null);
+            await()
+                    .atMost(5, MINUTES)
+                    .pollInterval(1, SECONDS)
+                    .until(() -> getDriverInThread() != null);
         } catch (ConditionTimeoutException e) {
             throw new DriverNotFoundException("Was unable to get a Remote Driver!!!");
         }
