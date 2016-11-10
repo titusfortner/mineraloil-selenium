@@ -90,7 +90,7 @@ public class WebdriverActions {
         driver.manage().deleteCookieNamed(name);
     }
 
-    public Set<Cookie> getCookies(String name) {
+    public Set<Cookie> getCookies() {
         return driver.manage().getCookies();
     }
 
