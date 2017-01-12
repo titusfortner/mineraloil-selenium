@@ -27,8 +27,8 @@ public class BaseElementTest extends BaseTest {
     @Test
     public void nestedElementLocate() {
         BaseElement grandparent = new BaseElement(By.xpath("//div[@id='nested_div']"));
-        BaseElement parent = grandparent.createBaseElement(By.xpath("div[@id='last_level']"));
-        BaseElement child = parent.createBaseElement(By.xpath("div[@class='duplicate_class']"));
+        BaseElement parent = grandparent.createBaseElement(By.xpath("//div[@id='last_level']"));
+        BaseElement child = parent.createBaseElement(By.xpath("//div[@class='duplicate_class']"));
         assertThat(child.getText()).isEqualTo("Nested Value With Shared Class");
     }
 
@@ -62,5 +62,6 @@ public class BaseElementTest extends BaseTest {
         checkboxElement.uncheck();
         assertThat(checkboxElement.isChecked()).isFalse();
     }
+
 
 }

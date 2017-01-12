@@ -28,7 +28,19 @@ public interface ElementActions {
 
     Element getParentElement();
 
+    Element getHoverElement();
+
+    Element getCollapsedParent();
+
+    boolean isScrollIntoView();
+
+    int getIndex();
+
     By getBy();
+
+    By getCollapsedXpathBy();
+
+    Element getIframeElement();
 
     boolean isInDOM();
 
