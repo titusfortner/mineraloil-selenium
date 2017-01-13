@@ -24,7 +24,9 @@ public class NestedXpathTest extends BaseTest {
         assertThat(levelThree.getCollapsedParent()).isNull();
 
         assertThat(levelThree.getText()).contains("Level 3", "Welcome to the last level");
+        assertThat(levelThree.getText()).doesNotContain("Level 1");
         assertThat(levelTwo.getText()).contains("Level 2", "Level 3", "Welcome to the last level");
+        assertThat(levelTwo.getText()).doesNotContain("Level 1");
         assertThat(levelOne.getText()).contains("Level 1", "Level 2", "Level 3", "Welcome to the last level");
     }
 
@@ -53,21 +55,8 @@ public class NestedXpathTest extends BaseTest {
         BaseElement hoverElement = new BaseElement(By.xpath("//div[@id='hoverElement']"));
         BaseElement elementWithHover = new BaseElement(By.xpath("//div[@id='elementWithHover']")).withHover(hoverElement);
         BaseElement nestedElement = elementWithHover.createBaseElement(By.xpath("//div[@id='childElement"));
-        assertThat(nestedElement.getCollapsedHoverElement().getBy()).isEqualTo(By.xpath("//div[@id='hoverElement']"));
+        assertThat(nestedElement.getHoverElement().getBy()).isEqualTo(By.xpath("//div[@id='hoverElement']"));
         assertThat(nestedElement.getCollapsedXpathBy()).isEqualTo(By.xpath("//div[@id='elementWithHover']//div[@id='childElement"));
-    }
-
-    @Test
-    public void nestElementWithMultipleHover() {
-        BaseElement hoverElement = new BaseElement(By.xpath("//div[@id='hoverElement']"));
-        BaseElement hoverElement2 = new BaseElement(By.xpath("//div[@id='hoverElementTwo']"));
-        BaseElement elementWithHover = new BaseElement(By.xpath("//div[@id='elementWithHover']")).withHover(hoverElement);
-        BaseElement elementWithHover2 = elementWithHover.createBaseElement(By.xpath("//div[@id='elementWithHoverTwo']")).withHover(hoverElement2);
-        BaseElement nestedElement = elementWithHover2.createBaseElement(By.xpath("//div[@id='childElement']"));
-
-        assertThat(elementWithHover2.getCollapsedXpathBy()).isNull();
-        assertThat(nestedElement.getCollapsedHoverElement().getBy()).isEqualTo(By.xpath("//div[@id='hoverElementTwo']"));
-        assertThat(nestedElement.getCollapsedXpathBy()).isEqualTo(By.xpath("//div[@id='elementWithHoverTwo']//div[@id='childElement']"));
     }
 
     @Test
