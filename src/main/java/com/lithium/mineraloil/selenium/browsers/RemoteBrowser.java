@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -37,7 +36,7 @@ abstract class RemoteBrowser implements Browser {
 
         try {
             await()
-                    .atMost(5, MINUTES)
+                    .atMost(1, MINUTES)
                     .pollInterval(1, SECONDS)
                     .until(() -> getDriverInThread() != null);
         } catch (ConditionTimeoutException e) {
@@ -56,7 +55,7 @@ abstract class RemoteBrowser implements Browser {
         Future future = executorService.submit(getDriverThreadCallableInstance());
 
         try {
-            discoveredWebDriver = (WebDriver) future.get(5, TimeUnit.SECONDS);
+            discoveredWebDriver = (WebDriver) future.get(2, MINUTES);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             // return null for webdriver so we retry
             log.info("Failed to get driver connection...retrying", e);
