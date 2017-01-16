@@ -14,7 +14,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -22,18 +21,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 class ElementImpl<T extends Element> implements Element<T> {
-    @Getter private int index = -1;
+    private int index = -1;
     private Element referenceElement;
-    @Getter private boolean scrollIntoView = false;
+    private boolean scrollIntoView = false;
 
-    @Setter @Getter private Element iframeElement;
-    @Setter @Getter private Element hoverElement;
+    @Setter private Element iframeElement;
+    @Setter private Element hoverElement;
     @Getter private Element parentElement;
     @Getter private final By by;
     @Getter private WebElement webElement;
-
-    @Getter private By collapsedXpathBy;
-    @Getter private Element collapsedParent;
 
 
     public ElementImpl(Element<T> referenceElement, By by) {
@@ -51,7 +47,6 @@ class ElementImpl<T extends Element> implements Element<T> {
         this.referenceElement = referenceElement;
         this.parentElement = parentElement;
         this.by = by;
-        this.collapsedXpathBy = collapseXpath();
     }
 
     public ElementImpl(Element<T> referenceElement, Element parentElement, By by, int index) {
@@ -113,28 +108,29 @@ class ElementImpl<T extends Element> implements Element<T> {
             }
         }
 
-        By currentBy = Optional.ofNullable(collapsedXpathBy).orElse(by);
-        Element parent = collapsedXpathBy == null ? parentElement : collapsedParent;
-        if (parent != null) {
-            By parentBy = getByForParentElement(currentBy);
+        if (parentElement != null) {
+            By parentBy = by;
+            if (by instanceof ByXPath) {
+                parentBy = getByForParentElement(by);
+            }
             if (index >= 0) {
-                List<WebElement> elements = parent.locateElement().findElements(parentBy);
+                List<WebElement> elements = parentElement.locateElement().findElements(parentBy);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = parent.locateElement().findElement(parentBy);
+                webElement = parentElement.locateElement().findElement(parentBy);
             }
         } else {
             if (index >= 0) {
-                List<WebElement> elements = DriverManager.INSTANCE.getDriver().findElements(currentBy);
+                List<WebElement> elements = DriverManager.INSTANCE.getDriver().findElements(by);
                 if (index > elements.size() - 1) {
                     throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
                 }
                 webElement = elements.get(index);
             } else {
-                webElement = DriverManager.INSTANCE.getDriver().findElement(currentBy);
+                webElement = DriverManager.INSTANCE.getDriver().findElement(by);
             }
         }
 
@@ -498,7 +494,6 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public T withParent(Element parentElement) {
         this.parentElement = parentElement;
-        this.collapsedXpathBy = collapseXpath();
         return (T) referenceElement;
     }
 
@@ -533,24 +528,5 @@ class ElementImpl<T extends Element> implements Element<T> {
         }
         return by;
     }
-
-    public static String extractSelector(By by) {
-        return by.toString().replaceFirst("By\\.\\w+:\\s\\.?", "");
-    }
-
-    public By collapseXpath() {
-        if (parentElement != null && by instanceof ByXPath && parentElement.getIframeElement() == null && parentElement.getIndex() < 0) {
-            By usedBy = Optional.ofNullable(parentElement.getCollapsedXpathBy()).orElse(parentElement.getBy());
-            if (usedBy instanceof ByXPath && !parentElement.isScrollIntoView()) {
-                String xpath = extractSelector(usedBy) + extractSelector(by);
-                hoverElement = parentElement.getHoverElement();
-                collapsedParent = parentElement;
-                collapsedParent = collapsedParent.getCollapsedParent();
-                return By.xpath(xpath);
-            }
-        }
-        return null;
-    }
-
 
 }
