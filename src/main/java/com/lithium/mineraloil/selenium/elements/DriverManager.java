@@ -15,11 +15,9 @@ import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -30,7 +28,7 @@ public enum DriverManager {
 
     @Setter
     private DriverConfiguration driverConfiguration;
-    private Map<String, LinkedList<DriverInstance>> drivers = new HashMap<>();
+    private LinkedList<DriverInstance> drivers = new LinkedList<>();
     private Set<PageLoadWaiter> pageLoadWaiters = new HashSet<>();
 
     @Delegate
@@ -46,10 +44,7 @@ public enum DriverManager {
     public void startDriver() {
         Preconditions.checkNotNull(driverConfiguration);
         DriverInstance driverInstance = new DriverInstance(driverConfiguration);
-        LinkedList<DriverInstance> threadInstances = getDriversForCurrentThread();
-        if (threadInstances == null) threadInstances = new LinkedList<>();
-        threadInstances.add(driverInstance);
-        drivers.put(Thread.currentThread().getName(), threadInstances);
+        drivers.add(driverInstance);
         resetActiveDriverIndex();
         log.info("User Agent: " + getUserAgent());
     }
@@ -57,17 +52,14 @@ public enum DriverManager {
     public void useDriver(WebDriver driver) {
         Preconditions.checkNotNull(driver);
         DriverInstance driverInstance = new DriverInstance(driver);
-        LinkedList<DriverInstance> threadInstances = getDriversForCurrentThread();
-        if (threadInstances == null) threadInstances = new LinkedList<>();
-        threadInstances.add(driverInstance);
-        drivers.put(Thread.currentThread().getName(), threadInstances);
+        drivers.add(driverInstance);
         resetActiveDriverIndex();
         log.info("User Agent: " + getUserAgent());
     }
 
     public void stopDriver() {
-        DriverInstance driverInstance = getDriversForCurrentThread().removeLast();
-        log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", getDriverCount()));
+        DriverInstance driverInstance = drivers.removeLast();
+        log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", drivers.size()));
         driverInstance.getDriver().quit();
         resetActiveDriverIndex();
         if (isDriverStarted()) {
@@ -78,7 +70,7 @@ public enum DriverManager {
     }
 
     public int getNumberOfDrivers() {
-        return getDriverCount();
+        return drivers.size();
     }
 
     public void get(String url) {
@@ -97,7 +89,7 @@ public enum DriverManager {
     // package private so we don't leak this outside of the abstraction
     WebDriver getDriver() {
         if (!isDriverStarted()) throw new DriverNotFoundException("Unable to locate a started WebDriver instance");
-        return getDriversForCurrentThread().get(activeDriverIndex).getDriver();
+        return drivers.get(activeDriverIndex).getDriver();
     }
 
     // switches to the last opened window
@@ -108,7 +100,7 @@ public enum DriverManager {
 
     // selects active driver
     public void switchDriver(int index) {
-        Preconditions.checkArgument(index < getDriverCount());
+        Preconditions.checkArgument(index < drivers.size());
         this.activeDriverIndex = index;
     }
 
@@ -136,7 +128,7 @@ public enum DriverManager {
     }
 
     public boolean isDriverStarted() {
-        return getDriverCount() > 0;
+        return drivers.size() > 0;
     }
 
     public void addPageLoadWaiter(PageLoadWaiter pageLoadWaiter) {
@@ -166,16 +158,7 @@ public enum DriverManager {
     }
 
     private void resetActiveDriverIndex() {
-        activeDriverIndex = getDriverCount() - 1;
-    }
-
-    private LinkedList<DriverInstance> getDriversForCurrentThread() {
-        return drivers.get(Thread.currentThread().getName());
-    }
-
-    private int getDriverCount() {
-        if (getDriversForCurrentThread() == null) return 0;
-        return getDriversForCurrentThread().size();
+        activeDriverIndex = drivers.size() - 1;
     }
 
 }
