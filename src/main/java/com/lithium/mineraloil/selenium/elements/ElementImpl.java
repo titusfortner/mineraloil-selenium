@@ -148,7 +148,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         log.debug("BaseElement: getting attribute: " + name);
         try {
             return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getAttribute(name); // may not be displayed
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (WebDriverException e) {
             return "";
         }
     }
@@ -163,7 +163,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         log.debug("BaseElement: getting css value: " + name);
         try {
             return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getCssValue(name); // may not be displayed
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (WebDriverException e) {
             return "";
         }
     }
@@ -178,7 +178,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isInDOM() {
         try {
             locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS); // may not be displayed
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (WebDriverException e) {
             return false;
         }
         return true;
@@ -190,7 +190,7 @@ class ElementImpl<T extends Element> implements Element<T> {
             int waitTime = Waiter.STALE_ELEMENT_WAIT_MS;
             if (hoverElement != null) waitTime = Waiter.STALE_ELEMENT_WAIT_MS * 2;
             return locateElement(waitTime, MILLISECONDS).isDisplayed();
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (WebDriverException e) {
             return false;
         }
     }
@@ -199,7 +199,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isEnabled() {
         try {
             waitUntilEnabled(MILLISECONDS, Waiter.STALE_ELEMENT_WAIT_MS);
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (WebDriverException e) {
             return false;
         }
         return true;
@@ -275,9 +275,9 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isSelected() {
         waitUntilDisplayed();
         try {
-            Waiter.await().atMost(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).until(() -> locateElement().isSelected());
+            Waiter.await().ignoreExceptions().atMost(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).until(() -> locateElement().isSelected());
             return true;
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (ConditionTimeoutException e) {
             return false;
         }
     }
@@ -401,7 +401,7 @@ class ElementImpl<T extends Element> implements Element<T> {
                   .ignoreExceptions()
                   .until(() -> DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement()));
             return true;
-        } catch (ConditionTimeoutException | WebDriverException e) {
+        } catch (ConditionTimeoutException e) {
             return false;
         }
     }
