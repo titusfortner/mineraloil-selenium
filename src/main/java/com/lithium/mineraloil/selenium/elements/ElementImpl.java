@@ -75,7 +75,7 @@ class ElementImpl<T extends Element> implements Element<T> {
                 retries++;
             }
         }
-        throw new ConditionTimeoutException("Unable to locate element using by: " + getBy());
+        throw new NoSuchElementException("Unable to locate element using by: " + getBy());
     }
 
     @Override
