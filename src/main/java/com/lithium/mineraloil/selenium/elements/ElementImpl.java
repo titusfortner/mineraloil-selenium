@@ -1,6 +1,5 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.jayway.awaitility.core.ConditionTimeoutException;
 import com.thoughtworks.selenium.SeleniumException;
 import lombok.Getter;
 import lombok.Setter;
@@ -132,8 +131,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void click() {
-        waitUntilDisplayed();
-        locateElement().click();
+        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).click();
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
@@ -147,7 +145,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public String getAttribute(final String name) {
         log.debug("BaseElement: getting attribute: " + name);
         try {
-            return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getAttribute(name); // may not be displayed
+            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getAttribute(name); // may not be displayed
         } catch (WebDriverException e) {
             return "";
         }
@@ -155,14 +153,14 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public String getTagName() {
-        return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getTagName(); // may not be displayed
+        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getTagName(); // may not be displayed
     }
 
     @Override
     public String getCssValue(final String name) {
         log.debug("BaseElement: getting css value: " + name);
         try {
-            return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).getCssValue(name); // may not be displayed
+            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getCssValue(name); // may not be displayed
         } catch (WebDriverException e) {
             return "";
         }
@@ -170,8 +168,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public String getText() {
-        waitUntilDisplayed();
-        return locateElement().getText();
+        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getText();
     }
 
     @Override
@@ -198,11 +195,10 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public boolean isEnabled() {
         try {
-            waitUntilEnabled(MILLISECONDS, Waiter.STALE_ELEMENT_WAIT_MS);
+            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).isEnabled();
         } catch (WebDriverException e) {
             return false;
         }
-        return true;
     }
 
     public boolean isDisabled() {
@@ -251,35 +247,19 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void hover() {
-        waitUntilDisplayed();
         final Actions hoverHandler = DriverManager.INSTANCE.getActions();
-        final WebElement element = locateElement();
-
-        try {
-            Waiter.await().atMost(Waiter.INTERACT_WAIT_S, SECONDS).ignoreExceptions().until(() -> {
-                hoverHandler.moveToElement(element).perform();
-                return true;
-            });
-        } catch (ConditionTimeoutException e) {
-            // ignore, best effort retry
-        }
+        final WebElement element = locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
+        hoverHandler.moveToElement(element).perform();
     }
 
     @Override
     public void sendKeys(final Keys... keys) {
-        waitUntilDisplayed();
-        locateElement().sendKeys(keys);
+        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(keys);
     }
 
     @Override
     public boolean isSelected() {
-        waitUntilDisplayed();
-        try {
-            Waiter.await().ignoreExceptions().atMost(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).until(() -> locateElement().isSelected());
-            return true;
-        } catch (ConditionTimeoutException e) {
-            return false;
-        }
+        return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).isSelected();
     }
 
     @Override
@@ -395,26 +375,16 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public boolean isFocused() {
-        waitUntilDisplayed();
-        try {
-            Waiter.await().atMost(Waiter.INTERACT_WAIT_S, SECONDS)
-                  .ignoreExceptions()
-                  .until(() -> DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement()));
-            return true;
-        } catch (ConditionTimeoutException e) {
-            return false;
-        }
+        return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement(Waiter.DISPLAY_WAIT_S, SECONDS));
     }
 
     @Override
     public void focus() {
-        waitUntilDisplayed();
-        DriverManager.INSTANCE.getActions().moveToElement(locateElement()).perform();
+        DriverManager.INSTANCE.getActions().moveToElement(locateElement(Waiter.DISPLAY_WAIT_S, SECONDS)).perform();
     }
 
     public void flash() {
-        waitUntilDisplayed();
-        final WebElement element = locateElement();
+        final WebElement element = locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
         String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
         for (int i = 0; i < 20; i++) {
