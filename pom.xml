@@ -12,7 +12,7 @@
     <artifactId>mineraloil-selenium</artifactId>
     <name>mineraloil-selenium</name>
     <url>https://github.com/lithiumtech/mineraloil-selenium</url>
-    <version>1.22-SNAPSHOT</version>
+    <version>1.22</version>
     <packaging>jar</packaging>
 
     <description>
