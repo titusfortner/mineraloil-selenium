@@ -1,6 +1,7 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.jayway.awaitility.core.ConditionTimeoutException;
+import com.thoughtworks.selenium.SeleniumException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -8,11 +9,11 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.By.ByXPath;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -59,23 +60,22 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public WebElement locateElement(long waitTime, TimeUnit timeUnit) {
-        try {
-            if (timeUnit.equals(MILLISECONDS) && waitTime <= 100) {
-                // handle when poll interval is less than awaitility default of 100MS
-                Waiter.await()
-                      .atMost(waitTime, MILLISECONDS)
-                      .pollInterval(10, MILLISECONDS)
-                      .until(() -> locateElement() != null);
-            } else {
-                Waiter.await()
-                      .atMost(waitTime, timeUnit)
-                      .pollInterval(100, MILLISECONDS)
-                      .until(() -> locateElement() != null);
+        long waitMs = timeUnit.toMillis(waitTime);
+        long expireTime = Instant.now().toEpochMilli() + waitMs;
+        int retries = 0;
+        // guarantee two attempts, otherwise time out as requested
+        while (Instant.now().toEpochMilli() < expireTime || retries < 2) {
+            try {
+                WebElement element = locateElement();
+                if (element != null) {
+                    return element;
+                }
+            } catch (SeleniumException e) {
+                //ignore and retry
+                retries++;
             }
-        } catch (Exception e) {
-            throw new ConditionTimeoutException("Unable to locate element using by: " + getBy());
         }
-        return locateElement();
+        throw new ConditionTimeoutException("Unable to locate element using by: " + getBy());
     }
 
     @Override
@@ -95,18 +95,6 @@ class ElementImpl<T extends Element> implements Element<T> {
         }
 
         if (hoverElement != null && hoverElement.isDisplayed()) hoverElement.hover();
-
-        // cache element
-        if (webElement != null) {
-            try {
-                webElement.isDisplayed();
-                return webElement;
-            } catch (StaleElementReferenceException e) {
-                // page has updated so re-fetch the element
-            } catch (WebDriverException e) {
-                // browser instance has been reloaded so re-fetch the element
-            }
-        }
 
         if (parentElement != null) {
             By parentBy = by;
@@ -144,21 +132,14 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void click() {
-        hover();
-        clickNoHover();
-    }
-
-    @Override
-    public void doubleClick() {
-        hover();
-        DriverManager.INSTANCE.getActions().doubleClick(locateElement());
+        waitUntilDisplayed();
+        locateElement().click();
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
     @Override
-    public void clickNoHover() {
-        waitUntilDisplayed();
-        locateElement().click();
+    public void doubleClick() {
+        DriverManager.INSTANCE.getActions().doubleClick(locateElement());
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
@@ -235,7 +216,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
-        Waiter.await().atMost(waitTime, timeUnit).until(() -> locateElement().isDisplayed());
+        Waiter.await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
     }
 
     @Override
@@ -245,14 +226,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilNotDisplayed(TimeUnit timeUnit, final int waitTime) {
-        Waiter.await().atMost(waitTime, timeUnit).until(() -> {
-            try {
-                // If the element is not in the DOM, Selenium will throw a NoSuchElementException
-                return !locateElement().isDisplayed();
-            } catch (WebDriverException e) {
-                return true;
-            }
-        });
+        Waiter.await().atMost(waitTime, timeUnit).until(() -> !isDisplayed());
     }
 
     @Override
@@ -262,7 +236,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilEnabled(TimeUnit timeUnit, final int timeout) {
-        Waiter.await().atMost(timeout, timeUnit).until(() -> locateElement().isDisplayed() && locateElement().isEnabled());
+        Waiter.await().atMost(timeout, timeUnit).until(() -> isDisplayed() && isEnabled());
     }
 
     @Override
@@ -272,7 +246,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
-        Waiter.await().atMost(timeout, timeUnit).until(() -> !locateElement().isDisplayed() || !locateElement().isEnabled());
+        Waiter.await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
     }
 
     @Override

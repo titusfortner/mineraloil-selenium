@@ -16,8 +16,6 @@ public interface ElementActions {
 
     void doubleClick();
 
-    void clickNoHover();
-
     String getTagName();
 
     String getAttribute(String name);
