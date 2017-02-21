@@ -4,6 +4,7 @@ import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 @Slf4j
 public class RemoteChromeBrowser extends RemoteBrowser {
@@ -19,7 +20,7 @@ public class RemoteChromeBrowser extends RemoteBrowser {
 
     @Override
     public WebDriver getDriver() {
-        return getDriver(remoteWebdriverAddress, remoteChromePort);
+        return new RemoteWebDriver(serverAddress, desiredCapabilities);
     }
 
     @Override

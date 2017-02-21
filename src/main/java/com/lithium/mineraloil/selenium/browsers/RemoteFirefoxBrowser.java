@@ -3,7 +3,10 @@ package com.lithium.mineraloil.selenium.browsers;
 import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 @Slf4j
 public class RemoteFirefoxBrowser extends RemoteBrowser {
@@ -19,7 +22,9 @@ public class RemoteFirefoxBrowser extends RemoteBrowser {
 
     @Override
     public WebDriver getDriver() {
-        return getDriver(remoteWebdriverAddress, remoteFirefoxPort);
+        DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+        capabilities.setCapability(FirefoxDriver.PROFILE, firefoxProfile);
+        return new RemoteWebDriver(serverAddress, capabilities);
     }
 
     @Override
