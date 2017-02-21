@@ -6,6 +6,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
+import java.net.URL;
+import java.util.concurrent.Callable;
+
 @Slf4j
 public class RemoteChromeBrowser extends RemoteBrowser {
     private final DesiredCapabilities desiredCapabilities;
@@ -20,12 +23,34 @@ public class RemoteChromeBrowser extends RemoteBrowser {
 
     @Override
     public WebDriver getDriver() {
-        return new RemoteWebDriver(serverAddress, desiredCapabilities);
+        return getDriver(remoteWebdriverAddress, remoteChromePort);
     }
 
     @Override
     void logCapabilities() {
         log.info(String.format("Desired Capabilities: %s", desiredCapabilities));
     }
+
+    @Override
+    Callable<WebDriver> getDriverThreadCallableInstance() {
+        return new GridDriverThread(serverAddress, desiredCapabilities);
+    }
+
+    private class GridDriverThread implements Callable<WebDriver> {
+
+        URL serverAddress;
+        DesiredCapabilities profile;
+
+        public GridDriverThread(URL serverAddress, DesiredCapabilities profile) {
+            this.serverAddress = serverAddress;
+            this.profile = profile;
+        }
+
+        @Override
+        public WebDriver call() {
+            return new RemoteWebDriver(serverAddress, profile);
+        }
+    }
+
 
 }
