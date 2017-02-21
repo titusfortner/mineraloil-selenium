@@ -1,28 +1,15 @@
 package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Throwables;
-import com.jayway.awaitility.core.ConditionTimeoutException;
-import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 abstract class RemoteBrowser implements Browser {
     protected static URL serverAddress;
-    private WebDriver discoveredWebDriver;
 
     public abstract WebDriver getDriver();
 
@@ -34,40 +21,10 @@ abstract class RemoteBrowser implements Browser {
             Throwables.propagate(e);
         }
 
-        try {
-            await()
-                    .atMost(1, MINUTES)
-                    .pollInterval(1, SECONDS)
-                    .until(() -> getDriverInThread() != null);
-        } catch (ConditionTimeoutException e) {
-            throw new DriverNotFoundException("Was unable to get a Remote Driver!!!");
-        }
-
-        WebDriver webDriver = discoveredWebDriver;
-
+        WebDriver webDriver = getDriver();
         logCapabilities();
         return webDriver;
     }
 
-    private WebDriver getDriverInThread() {
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Future future = executorService.submit(getDriverThreadCallableInstance());
-
-        try {
-            discoveredWebDriver = (WebDriver) future.get(2, MINUTES);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            // return null for webdriver so we retry
-            log.info("Failed to get driver connection...retrying", e);
-            discoveredWebDriver = null;
-        } finally {
-            executorService.shutdown();
-        }
-        return discoveredWebDriver;
-    }
-
     abstract void logCapabilities();
-
-    abstract Callable<WebDriver> getDriverThreadCallableInstance();
-
 }
