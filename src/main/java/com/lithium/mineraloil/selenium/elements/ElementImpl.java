@@ -132,7 +132,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void click() {
         waitUntilDisplayed();
-        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).click();
+        locateElement(Waiter.INTERACT_WAIT_S, SECONDS).click();
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
@@ -146,23 +146,23 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public String getAttribute(final String name) {
         log.debug("BaseElement: getting attribute: " + name);
-        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getAttribute(name); // may not be displayed
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute(name); // may not be displayed
     }
 
     @Override
     public String getTagName() {
-        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getTagName(); // may not be displayed
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getTagName(); // may not be displayed
     }
 
     @Override
     public String getCssValue(final String name) {
         log.debug("BaseElement: getting css value: " + name);
-        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getCssValue(name); // may not be displayed
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getCssValue(name); // may not be displayed
     }
 
     @Override
     public String getText() {
-        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getText();
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getText();
     }
 
     @Override
