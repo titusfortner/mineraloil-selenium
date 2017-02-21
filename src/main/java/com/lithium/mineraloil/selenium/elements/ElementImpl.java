@@ -1,7 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.jayway.awaitility.core.ConditionTimeoutException;
-import com.thoughtworks.selenium.SeleniumException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +69,7 @@ class ElementImpl<T extends Element> implements Element<T> {
                 if (element != null) {
                     return element;
                 }
-            } catch (SeleniumException e) {
+            } catch (WebDriverException e) {
                 //ignore and retry
                 retries++;
             }
