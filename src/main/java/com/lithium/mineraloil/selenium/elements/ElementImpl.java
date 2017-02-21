@@ -1,5 +1,6 @@
 package com.lithium.mineraloil.selenium.elements;
 
+import com.jayway.awaitility.core.ConditionTimeoutException;
 import com.thoughtworks.selenium.SeleniumException;
 import lombok.Getter;
 import lombok.Setter;
@@ -144,11 +145,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public String getAttribute(final String name) {
         log.debug("BaseElement: getting attribute: " + name);
-        try {
-            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getAttribute(name); // may not be displayed
-        } catch (WebDriverException e) {
-            return "";
-        }
+        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getAttribute(name); // may not be displayed
     }
 
     @Override
@@ -159,11 +156,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public String getCssValue(final String name) {
         log.debug("BaseElement: getting css value: " + name);
-        try {
-            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getCssValue(name); // may not be displayed
-        } catch (WebDriverException e) {
-            return "";
-        }
+        return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).getCssValue(name); // may not be displayed
     }
 
     @Override
@@ -247,9 +240,19 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void hover() {
-        final Actions hoverHandler = DriverManager.INSTANCE.getActions();
-        final WebElement element = locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
-        hoverHandler.moveToElement(element).perform();
+        try {
+            Waiter.await().until(() -> {
+                try {
+                    final Actions hoverHandler = DriverManager.INSTANCE.getActions();
+                    hoverHandler.moveToElement(locateElement()).perform();
+                    return true;
+                } catch (WebDriverException e) {
+                    return false;
+                }
+            });
+        } catch (ConditionTimeoutException e) {
+            throw new NoSuchElementException("Unable to hover over element: " + getBy().toString());
+        }
     }
 
     @Override
