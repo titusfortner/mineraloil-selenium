@@ -36,7 +36,7 @@ abstract class RemoteBrowser implements Browser {
 
         try {
             await()
-                    .atMost(2, MINUTES)
+                    .atMost(20, SECONDS)
                     .pollInterval(5, SECONDS)
                     .until(() -> getDriverInThread() != null);
         } catch (ConditionTimeoutException e) {
