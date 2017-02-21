@@ -24,6 +24,8 @@ public interface ElementActions {
 
     String getText();
 
+    String getTextContent();
+
     Element getParentElement();
 
     By getBy();
