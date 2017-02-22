@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.lithium.mineraloil.selenium.elements.Waiter.INTERACT_WAIT_S;
+import static com.lithium.mineraloil.selenium.elements.Waiter.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -79,14 +81,6 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public WebElement locateElement() {
-        log.debug(String.format("WebDriver: locating element: '%s', index '%s', parent '%s'", by, index, parentElement));
-        if (log.isDebugEnabled()) {
-            if (DriverManager.INSTANCE.isAlertPresent()) {
-                log.debug("GOT UNEXPECTED ALERT");
-            }
-            Screenshot.takeScreenshot("locateElement");
-        }
-
         if (isWithinIFrame()) {
             ((BaseElement) iframeElement).switchFocusToIFrame();
         } else {
@@ -125,56 +119,79 @@ class ElementImpl<T extends Element> implements Element<T> {
             scrollElement(webElement);
         }
 
-        log.debug("WebDriver: Found element: " + webElement);
         return webElement;
     }
 
     @Override
     public void click() {
         waitUntilDisplayed();
-        locateElement(Waiter.INTERACT_WAIT_S, SECONDS).click();
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().click();
+            return true;
+        });
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
     @Override
     public void doubleClick() {
         waitUntilDisplayed();
-        DriverManager.INSTANCE.getActions().doubleClick(locateElement());
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            DriverManager.INSTANCE.getActions().doubleClick(locateElement());
+            return true;
+        });
         DriverManager.INSTANCE.waitForPageLoad();
     }
 
     @Override
     public String getAttribute(final String name) {
-        log.debug("BaseElement: getting attribute: " + name);
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute(name); // may not be displayed
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().getAttribute(name);
+            return true;
+        });
+        return locateElement().getAttribute(name);
     }
 
     @Override
     public String getTagName() {
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getTagName(); // may not be displayed
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().getTagName();
+            return true;
+        });
+        return locateElement().getTagName();
     }
 
     @Override
     public String getCssValue(final String name) {
-        log.debug("BaseElement: getting css value: " + name);
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getCssValue(name); // may not be displayed
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().getCssValue(name);
+            return true;
+        });
+        return locateElement().getCssValue(name);
     }
 
     @Override
     public String getText() {
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("textContent").trim();
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().getAttribute("textContent");
+            return true;
+        });
+        return locateElement().getAttribute("textContent").trim();
     }
 
     @Override
     public String getInnerText() {
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("innerText").trim();
+        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
+            locateElement().getAttribute("innerText");
+            return true;
+        });
+        return locateElement().getAttribute("innerText").trim();
     }
 
     @Override
     public boolean isInDOM() {
         try {
             locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS); // may not be displayed
-        } catch (WebDriverException e) {
+        } catch (NoSuchElementException e) {
             return false;
         }
         return true;
@@ -211,7 +228,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
-        Waiter.await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
+        await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
     }
 
     @Override
@@ -221,7 +238,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilNotDisplayed(TimeUnit timeUnit, final int waitTime) {
-        Waiter.await().atMost(waitTime, timeUnit).until(() -> !isDisplayed());
+        await().atMost(waitTime, timeUnit).until(() -> !isDisplayed());
     }
 
     @Override
@@ -231,7 +248,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilEnabled(TimeUnit timeUnit, final int timeout) {
-        Waiter.await().atMost(timeout, timeUnit).until(() -> isDisplayed() && isEnabled());
+        await().atMost(timeout, timeUnit).until(() -> isDisplayed() && isEnabled());
     }
 
     @Override
@@ -241,14 +258,14 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
-        Waiter.await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
+        await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
     }
 
     @Override
     public void hover() {
         waitUntilDisplayed();
         try {
-            Waiter.await().until(() -> {
+            await().until(() -> {
                 try {
                     final Actions hoverHandler = DriverManager.INSTANCE.getActions();
                     hoverHandler.moveToElement(locateElement()).perform();
@@ -422,10 +439,10 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     public void fireEvent(String eventName) {
-        Waiter.await().atMost(Waiter.DISPLAY_WAIT_S, SECONDS)
-              .pollInterval(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS)
-              .ignoreExceptions()
-              .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
+        await().atMost(Waiter.DISPLAY_WAIT_S, SECONDS)
+               .pollInterval(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS)
+               .ignoreExceptions()
+               .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
     }
 
     private boolean isWithinIFrame() {
