@@ -24,7 +24,7 @@ public interface ElementActions {
 
     String getText();
 
-    String getTextContent();
+    String getInnerText();
 
     Element getParentElement();
 

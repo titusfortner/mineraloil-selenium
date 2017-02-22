@@ -162,12 +162,12 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public String getText() {
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("innerText").trim();
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("textContent").trim();
     }
 
     @Override
-    public String getTextContent() {
-        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("textContent").trim();
+    public String getInnerText() {
+        return locateElement(Waiter.INTERACT_WAIT_S, SECONDS).getAttribute("innerText").trim();
     }
 
     @Override
