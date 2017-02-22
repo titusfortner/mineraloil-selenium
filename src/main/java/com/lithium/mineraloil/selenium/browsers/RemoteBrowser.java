@@ -36,7 +36,7 @@ abstract class RemoteBrowser implements Browser {
 
         try {
             await()
-                    .atMost(1, MINUTES)
+                    .atMost(2, MINUTES)
                     .pollInterval(5, SECONDS)
                     .until(() -> getDriverInThread() != null);
         } catch (ConditionTimeoutException e) {
@@ -55,7 +55,7 @@ abstract class RemoteBrowser implements Browser {
         Future future = executorService.submit(getDriverThreadCallableInstance());
 
         try {
-            discoveredWebDriver = (WebDriver) future.get(2, MINUTES);
+            discoveredWebDriver = (WebDriver) future.get(30, SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             // return null for webdriver so we retry
             log.info("Failed to get driver connection...retrying", e);
