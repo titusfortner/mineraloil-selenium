@@ -4,13 +4,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
-import java.util.concurrent.TimeUnit;
-
 public interface ElementActions {
 
     public WebElement locateElement();
-
-    public WebElement locateElement(long waitTime, TimeUnit timeUnit);
 
     void click();
 

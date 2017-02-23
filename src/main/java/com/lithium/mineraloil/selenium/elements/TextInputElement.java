@@ -5,7 +5,10 @@ import lombok.experimental.Delegate;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriverException;
+
+import java.time.Instant;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -23,7 +26,17 @@ public class TextInputElement implements Element {
     }
 
     public void clear() {
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).clear();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().clear();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     /**
@@ -33,9 +46,20 @@ public class TextInputElement implements Element {
      */
     public void type(final String text) {
         if (text == null) return;
-        WebElement element = elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
-        element.clear();
-        element.sendKeys(text);
+        waitUntilEnabled();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().clear();
+                elementImpl.locateElement().sendKeys(text);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
+
     }
 
     /**
@@ -45,7 +69,17 @@ public class TextInputElement implements Element {
      */
     public void pressKey(final Keys keys) {
         if (keys == null) return;
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(keys);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(keys);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     /**
@@ -55,7 +89,17 @@ public class TextInputElement implements Element {
      */
     public void pressKey(final String key) {
         if (key == null) return;
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(key);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(key);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     /**
@@ -66,7 +110,17 @@ public class TextInputElement implements Element {
      */
     public void appendType(final String text) {
         if (text == null) return;
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(text);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(text);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     /**
@@ -77,14 +131,35 @@ public class TextInputElement implements Element {
      */
     public void prependType(final String text) {
         if (text == null) return;
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_UP) + text);
-        moveCursorToEndOfInput();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_UP) + text);
+                moveCursorToEndOfInput();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
+
     }
 
     private void moveCursorToEndOfInput() {
-        WebElement element = elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
-        element.sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_DOWN));
-        element.click();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_DOWN));
+                elementImpl.locateElement().click();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
+
     }
 
     public void pressReturn() {

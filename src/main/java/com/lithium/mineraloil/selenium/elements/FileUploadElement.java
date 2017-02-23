@@ -2,6 +2,10 @@ package com.lithium.mineraloil.selenium.elements;
 
 import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriverException;
+
+import java.time.Instant;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -19,6 +23,16 @@ public class FileUploadElement implements Element {
 
     public void type(final String text) {
         if (text == null) return;
-        elementImpl.locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(text);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+            try {
+                elementImpl.locateElement().sendKeys(text);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 }

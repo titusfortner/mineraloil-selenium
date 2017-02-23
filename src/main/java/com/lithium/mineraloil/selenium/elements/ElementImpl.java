@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.lithium.mineraloil.selenium.elements.Waiter.INTERACT_WAIT_S;
+import static com.lithium.mineraloil.selenium.elements.Waiter.DISPLAY_WAIT_S;
 import static com.lithium.mineraloil.selenium.elements.Waiter.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -32,6 +32,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Getter private Element parentElement;
     @Getter private final By by;
     @Getter private WebElement webElement;
+    private int LOCATE_RETRIES = 2;
 
 
     public ElementImpl(Element<T> referenceElement, By by) {
@@ -58,26 +59,6 @@ class ElementImpl<T extends Element> implements Element<T> {
         this.index = index;
     }
 
-
-    @Override
-    public WebElement locateElement(long waitTime, TimeUnit timeUnit) {
-        long waitMs = timeUnit.toMillis(waitTime);
-        long expireTime = Instant.now().toEpochMilli() + waitMs;
-        int retries = 0;
-        // guarantee two attempts, otherwise time out as requested
-        while (Instant.now().toEpochMilli() < expireTime || retries < 2) {
-            try {
-                WebElement element = locateElement();
-                if (element != null) {
-                    return element;
-                }
-            } catch (WebDriverException e) {
-                //ignore and retry
-                retries++;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element using by: " + getBy());
-    }
 
     @Override
     public WebElement locateElement() {
@@ -125,140 +106,155 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void click() {
         waitUntilDisplayed();
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().click();
-            return true;
-        });
-        DriverManager.INSTANCE.waitForPageLoad();
+
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                locateElement().click();
+                DriverManager.INSTANCE.waitForPageLoad();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public void doubleClick() {
         waitUntilDisplayed();
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            DriverManager.INSTANCE.getActions().doubleClick(locateElement());
-            return true;
-        });
-        DriverManager.INSTANCE.waitForPageLoad();
+
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                DriverManager.INSTANCE.getActions().doubleClick(locateElement());
+                DriverManager.INSTANCE.waitForPageLoad();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public String getAttribute(final String name) {
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().getAttribute(name);
-            return true;
-        });
-        return locateElement().getAttribute(name);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().getAttribute(name);
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public String getTagName() {
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().getTagName();
-            return true;
-        });
-        return locateElement().getTagName();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().getTagName();
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public String getCssValue(final String name) {
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().getCssValue(name);
-            return true;
-        });
-        return locateElement().getCssValue(name);
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().getCssValue(name);
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public String getText() {
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().getAttribute("textContent");
-            return true;
-        });
-        return locateElement().getAttribute("textContent").trim();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().getAttribute("textContent").trim();
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public String getInnerText() {
-        await().atMost(INTERACT_WAIT_S, SECONDS).until(() -> {
-            locateElement().getAttribute("innerText");
-            return true;
-        });
-        return locateElement().getAttribute("innerText").trim();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().getAttribute("innerText").trim();
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public boolean isInDOM() {
-        try {
-            locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS); // may not be displayed
-        } catch (NoSuchElementException e) {
-            return false;
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + MILLISECONDS.toMillis(Waiter.STALE_ELEMENT_WAIT_MS);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement() != null;
+            } catch (WebDriverException e) {
+                retries++;
+            }
         }
-        return true;
+        return false;
     }
 
     @Override
     public boolean isDisplayed() {
-        try {
-            int waitTime = Waiter.STALE_ELEMENT_WAIT_MS;
-            if (hoverElement != null) waitTime = Waiter.STALE_ELEMENT_WAIT_MS * 2;
-            return locateElement(waitTime, MILLISECONDS).isDisplayed();
-        } catch (WebDriverException e) {
-            return false;
+        int retries = 0;
+        int waitTime = Waiter.STALE_ELEMENT_WAIT_MS;
+        if (hoverElement != null) waitTime = Waiter.STALE_ELEMENT_WAIT_MS * 2;
+        long expireTime = Instant.now().toEpochMilli() + MILLISECONDS.toMillis(waitTime);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().isDisplayed();
+            } catch (WebDriverException e) {
+                retries++;
+            }
         }
+        return false;
     }
 
     @Override
     public boolean isEnabled() {
-        try {
-            return locateElement(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS).isEnabled();
-        } catch (WebDriverException e) {
-            return false;
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + MILLISECONDS.toMillis(Waiter.STALE_ELEMENT_WAIT_MS);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().isEnabled();
+            } catch (WebDriverException e) {
+                retries++;
+            }
         }
+        return false;
     }
 
     public boolean isDisabled() {
         return "true".equals(getAttribute("disabled"));
-    }
-
-    @Override
-    public void waitUntilDisplayed() {
-        waitUntilDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
-    }
-
-    @Override
-    public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
-        await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
-    }
-
-    @Override
-    public void waitUntilNotDisplayed() {
-        waitUntilNotDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
-    }
-
-    @Override
-    public void waitUntilNotDisplayed(TimeUnit timeUnit, final int waitTime) {
-        await().atMost(waitTime, timeUnit).until(() -> !isDisplayed());
-    }
-
-    @Override
-    public void waitUntilEnabled() {
-        waitUntilEnabled(SECONDS, Waiter.DISPLAY_WAIT_S);
-    }
-
-    @Override
-    public void waitUntilEnabled(TimeUnit timeUnit, final int timeout) {
-        await().atMost(timeout, timeUnit).until(() -> isDisplayed() && isEnabled());
-    }
-
-    @Override
-    public void waitUntilNotEnabled() {
-        waitUntilNotDisplayed(SECONDS, Waiter.DISPLAY_WAIT_S);
-    }
-
-    @Override
-    public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
-        await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
     }
 
     @Override
@@ -282,19 +278,81 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void sendKeys(final Keys... keys) {
         waitUntilDisplayed();
-        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).sendKeys(keys);
+
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                locateElement().sendKeys(keys);
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public boolean isSelected() {
         waitUntilDisplayed();
-        return locateElement(Waiter.DISPLAY_WAIT_S, SECONDS).isSelected();
+
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return locateElement().isSelected();
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
+    }
+
+    @Override
+    public boolean isFocused() {
+        waitUntilDisplayed();
+
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement());
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
+    }
+
+    @Override
+    public void focus() {
+        waitUntilDisplayed();
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                DriverManager.INSTANCE.getActions().moveToElement(locateElement()).perform();
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
     public void scrollIntoView() {
-        locateElement(Waiter.DISPLAY_WAIT_S, SECONDS); // may not be displayed
-        scrollElement(locateElement());
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                scrollElement(locateElement());
+                return;
+            } catch (WebDriverException e) {
+                retries++;
+            }
+        }
+        throw new NoSuchElementException("Unable to locate element: " + getBy());
     }
 
     @Override
@@ -402,21 +460,9 @@ class ElementImpl<T extends Element> implements Element<T> {
         return new ElementList<TableRowElement>(childBy, TableRowElement.class).withParent(this);
     }
 
-    @Override
-    public boolean isFocused() {
-        waitUntilDisplayed();
-        return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement(Waiter.DISPLAY_WAIT_S, SECONDS));
-    }
-
-    @Override
-    public void focus() {
-        waitUntilDisplayed();
-        DriverManager.INSTANCE.getActions().moveToElement(locateElement(Waiter.DISPLAY_WAIT_S, SECONDS)).perform();
-    }
-
     public void flash() {
         waitUntilDisplayed();
-        final WebElement element = locateElement(Waiter.DISPLAY_WAIT_S, SECONDS);
+        final WebElement element = locateElement();
         String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
         for (int i = 0; i < 20; i++) {
@@ -439,7 +485,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     public void fireEvent(String eventName) {
-        await().atMost(Waiter.DISPLAY_WAIT_S, SECONDS)
+        await().atMost(DISPLAY_WAIT_S, SECONDS)
                .pollInterval(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS)
                .ignoreExceptions()
                .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
@@ -487,7 +533,6 @@ class ElementImpl<T extends Element> implements Element<T> {
         DriverManager.INSTANCE.executeScript("arguments[0].scrollIntoView(true);", webElement);
     }
 
-
     /*
     Allows users to be able to do a complete node search within its parent without
     having to always remember to add .// before the xpath
@@ -503,6 +548,46 @@ class ElementImpl<T extends Element> implements Element<T> {
             return By.xpath(xpath);
         }
         return by;
+    }
+
+    @Override
+    public void waitUntilDisplayed() {
+        waitUntilDisplayed(SECONDS, DISPLAY_WAIT_S);
+    }
+
+    @Override
+    public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
+        await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
+    }
+
+    @Override
+    public void waitUntilNotDisplayed() {
+        waitUntilNotDisplayed(SECONDS, DISPLAY_WAIT_S);
+    }
+
+    @Override
+    public void waitUntilNotDisplayed(TimeUnit timeUnit, final int waitTime) {
+        await().atMost(waitTime, timeUnit).until(() -> !isDisplayed());
+    }
+
+    @Override
+    public void waitUntilEnabled() {
+        waitUntilEnabled(SECONDS, DISPLAY_WAIT_S);
+    }
+
+    @Override
+    public void waitUntilEnabled(TimeUnit timeUnit, final int timeout) {
+        await().atMost(timeout, timeUnit).until(() -> isDisplayed() && isEnabled());
+    }
+
+    @Override
+    public void waitUntilNotEnabled() {
+        waitUntilNotDisplayed(SECONDS, DISPLAY_WAIT_S);
+    }
+
+    @Override
+    public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
+        await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
     }
 
 }
