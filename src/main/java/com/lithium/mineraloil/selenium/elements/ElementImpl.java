@@ -187,7 +187,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
         while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
             try {
-                return locateElement().getAttribute("textContent").trim();
+                return locateElement().getAttribute("textContent").trim().replaceAll("\u00A0","");
             } catch (WebDriverException e) {
                 retries++;
             }
@@ -201,7 +201,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
         while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
             try {
-                return locateElement().getAttribute("innerText").trim();
+                return locateElement().getAttribute("innerText").trim().replaceAll("\u00A0","");
             } catch (WebDriverException e) {
                 retries++;
             }
