@@ -2,12 +2,17 @@ package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.exceptions.ElementListException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElementList<T extends Element> extends AbstractList<T> {
     protected final By by;
@@ -88,7 +93,16 @@ public class ElementList<T extends Element> extends AbstractList<T> {
         handlePossibleIFrame();
         if (hoverElement != null) hoverElement.hover();
         if (parentElement != null) {
-            return parentElement.locateElement().findElements(ElementImpl.getByForParentElement(by));
+            int retries = 0;
+            long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
+            while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
+                try {
+                    return parentElement.locateElement().findElements(ElementImpl.getByForParentElement(by));
+                } catch (WebDriverException e) {
+                    retries++;
+                }
+            }
+            throw new NoSuchElementException("Unable to locate element: " + parentElement.getBy());
         } else {
             return DriverManager.INSTANCE.getDriver().findElements(by);
         }
