@@ -10,6 +10,8 @@ public interface ElementActions {
 
     void click();
 
+    void clickWithOffset(int x, int y);
+
     void doubleClick();
 
     String getTagName();
