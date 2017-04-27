@@ -13,12 +13,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Screenshot {
 
     private static final String screenShotDirectory = getDirectory("screenshots");
     private static final String htmlScreenShotDirectory = getDirectory("html-screenshots");
+    private static final String consoleLogDirectory = getDirectory("console-logs");
 
     public static void takeScreenshot(String filename) {
         if (log.isDebugEnabled()) {
@@ -74,7 +77,38 @@ public class Screenshot {
         } finally {
             try {
                 writer.close();
-            } catch (Exception e) {
+            } catch (IOException e) {
+                log.info("Unable to close writer");
+            }
+        }
+    }
+
+    public static void saveConsoleLog(String filename){
+        if (!DriverManager.INSTANCE.isDriverStarted()){
+            log.error("Webdriver not started. Unable to save log.");
+            return;
+        }
+
+        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".log";
+
+        Writer writer = null;
+        log.info("Capturing Console Log snapshot: " + consoleLogDirectory + filename);
+
+        try {
+            writer = new BufferedWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream(consoleLogDirectory + filename), "utf-8"));
+            writer.write(DriverManager.INSTANCE.getConsoleLog()
+                                               .filter(Level.SEVERE)
+                                               .stream()
+                                               .map(logEntry -> logEntry.getMessage().concat("\n"))
+                                               .collect(Collectors.joining()));
+        } catch (IOException ex) {
+            log.info("Unable to write out current console log");
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
                 log.info("Unable to close writer");
             }
         }
