@@ -19,17 +19,23 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Screenshot {
 
-    private static final String screenShotDirectory = getDirectory("screenshots");
-    private static final String htmlScreenShotDirectory = getDirectory("html-screenshots");
-    private static final String consoleLogDirectory = getDirectory("console-logs");
+    private static String screenShotDirectory;
+    private static String htmlScreenShotDirectory;
+    private static String consoleLogDirectory;
+
+    private static String className;
+    private static String classPath;
+    private static String testClassDirectory = "";
 
     public static void takeScreenshot(String filename) {
+        filename = renameIfClassPath(filename);
+        screenShotDirectory = testClassDirectory.isEmpty() ? getDirectory("screenshots") : getDirectory("screenshots/" + testClassDirectory);
         if (log.isDebugEnabled()) {
             takeFullDesktopScreenshot(filename);
         } else {
             if (DriverManager.INSTANCE.isDriverStarted()) {
                 try {
-                    filename +=  "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
+                    filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
                     File scrFile = DriverManager.INSTANCE.takeScreenshot();
                     log.info("Creating Screenshot: " + screenShotDirectory + filename);
                     FileUtils.copyFile(scrFile, new File(screenShotDirectory + filename));
@@ -44,7 +50,7 @@ public class Screenshot {
 
     public static void takeFullDesktopScreenshot(String filename) {
         try {
-            filename +=  "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
+            filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
             BufferedImage img = getScreenAsBufferedImage();
             File output = new File(filename);
             ImageIO.write(img, "png", output);
@@ -57,12 +63,14 @@ public class Screenshot {
     }
 
     public static void takeHTMLScreenshot(String filename) {
+        filename = renameIfClassPath(filename);
+        htmlScreenShotDirectory = testClassDirectory.isEmpty() ? getDirectory("html-screenshots") : getDirectory("screenshots/" + testClassDirectory) ;
         if (!DriverManager.INSTANCE.isDriverStarted()) {
             log.error("Webdriver not started. Unable to take html snapshot");
             return;
         }
 
-        filename +=  "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".html";
+        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".html";
 
         Writer writer = null;
         log.info("Capturing HTML snapshot: " + htmlScreenShotDirectory + filename);
@@ -83,8 +91,10 @@ public class Screenshot {
         }
     }
 
-    public static void saveConsoleLog(String filename){
-        if (!DriverManager.INSTANCE.isDriverStarted()){
+    public static void saveConsoleLog(String filename) {
+        filename = renameIfClassPath(filename);
+        consoleLogDirectory = testClassDirectory.isEmpty() ? getDirectory("console-logs") : getDirectory("screenshots/" + testClassDirectory) ;
+        if (!DriverManager.INSTANCE.isDriverStarted()) {
             log.error("Webdriver not started. Unable to save log.");
             return;
         }
@@ -136,4 +146,37 @@ public class Screenshot {
         return screenshotDirectory;
     }
 
+    private static String renameIfClassPath(String fileName) {
+        String path = attemptToParseClassPathDirectories(fileName);
+        if(path.isEmpty()){
+            return fileName;
+        } else {
+            classPath = truncateClassPath(path);
+            className = path.substring(path.lastIndexOf('.')+1);
+            String newFileName = classPath.length()+className.length()+1 == fileName.length() ? className.toLowerCase()
+                                                                                            : fileName.substring(classPath.length()+className.length()+2);
+            testClassDirectory = classPath + "/" + className + "/" + newFileName;
+            return newFileName;
+        }
+    }
+
+    private static String attemptToParseClassPathDirectories(String pathString) {
+        String parsedString = pathString;
+
+        while(!parsedString.isEmpty() && !isValidClassPath(parsedString)){
+            parsedString = truncateClassPath(parsedString);
+        }
+
+        return parsedString;
+    }
+
+    private static boolean isValidClassPath(String possibleClassPath){
+        try {
+            return !Class.forName(possibleClassPath).getName().isEmpty();
+        } catch (Exception e){ return false; }
+    }
+
+    private static String truncateClassPath(String classPath) {
+        return classPath.replaceFirst(".\\w*$","");
+    }
 }
