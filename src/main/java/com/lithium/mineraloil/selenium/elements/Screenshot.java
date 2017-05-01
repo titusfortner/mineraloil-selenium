@@ -99,7 +99,7 @@ public class Screenshot {
             return;
         }
 
-        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".log";
+        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + "_browser_console.log";
 
         Writer writer = null;
         log.info("Capturing Console Log snapshot: " + consoleLogDirectory + filename);
@@ -109,9 +109,12 @@ public class Screenshot {
                     new OutputStreamWriter(
                             new FileOutputStream(consoleLogDirectory + filename), "utf-8"));
             writer.write(DriverManager.INSTANCE.getConsoleLog()
-                                               .filter(Level.SEVERE)
+                                               .filter(Level.ALL)
                                                .stream()
-                                               .map(logEntry -> logEntry.getMessage().concat("\n"))
+                                               .map(logEntry -> logEntry.getLevel().toString()
+                                                                        .concat(": ")
+                                                                        .concat(logEntry.getMessage())
+                                                                        .concat("\n"))
                                                .collect(Collectors.joining()));
         } catch (IOException ex) {
             log.info("Unable to write out current console log");
