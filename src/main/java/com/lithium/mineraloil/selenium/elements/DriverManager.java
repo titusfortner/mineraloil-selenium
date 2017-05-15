@@ -161,4 +161,7 @@ public enum DriverManager {
         activeDriverIndex = drivers.size() - 1;
     }
 
+    public void autoHoverOnInput() {
+        ElementImpl.setAutoHoverOnInput(true);
+    }
 }

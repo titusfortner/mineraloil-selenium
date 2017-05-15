@@ -36,6 +36,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Getter private WebElement webElement;
     private int LOCATE_RETRIES = 2;
 
+    private static boolean autoHoverOnInput;
 
     public ElementImpl(Element<T> referenceElement, By by) {
         this.referenceElement = referenceElement;
@@ -124,9 +125,19 @@ class ElementImpl<T extends Element> implements Element<T> {
         throw new NoSuchElementException(exception.getMessage());
     }
 
+    public static boolean getAutoHoverOnInput() {
+        return autoHoverOnInput;
+    }
+
+    public static void setAutoHoverOnInput(Boolean value) {
+        autoHoverOnInput = value;
+    }
+
     @Override
     public void click() {
         waitUntilDisplayed();
+
+        if (autoHoverOnInput) hover();
 
         callSelenium(() -> {
             locateElement().click();
@@ -139,6 +150,8 @@ class ElementImpl<T extends Element> implements Element<T> {
     public void clickWithOffset(int x, int y) {
         waitUntilDisplayed();
 
+        if (autoHoverOnInput) hover();
+
         callSelenium(() -> {
             DriverManager.INSTANCE.getActions().moveToElement(locateElement(), x, y).click().perform();
             DriverManager.INSTANCE.waitForPageLoad();
@@ -149,6 +162,8 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void doubleClick() {
         waitUntilDisplayed();
+
+        if (autoHoverOnInput) hover();
 
         callSelenium(() -> {
             DriverManager.INSTANCE.getActions().doubleClick(locateElement());
@@ -261,6 +276,8 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void sendKeys(final Keys... keys) {
         waitUntilDisplayed();
+
+        if (autoHoverOnInput) hover();
 
         callSelenium(() -> {
             locateElement().sendKeys(keys);

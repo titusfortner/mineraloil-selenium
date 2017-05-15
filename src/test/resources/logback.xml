@@ -8,7 +8,7 @@
     </appender>
 
     <!--make this debug to get stack traces in waiters-->
-    <logger name="lsw.waiters.WaiterImpl" level="info" />
+    <logger name="lsw.waiters.WaiterImpl" level="info"/>
 
     <!--make this debug to get EXTENSIVE logging for:
         web calls

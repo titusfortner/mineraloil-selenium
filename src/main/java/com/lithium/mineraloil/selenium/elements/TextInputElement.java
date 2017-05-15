@@ -45,6 +45,8 @@ public class TextInputElement implements Element {
      * @param text the text to put into the text area
      */
     public void type(final String text) {
+        if (ElementImpl.getAutoHoverOnInput()) hover();
+
         if (text == null) return;
         waitUntilEnabled();
         int retries = 0;
@@ -109,6 +111,8 @@ public class TextInputElement implements Element {
      * @param text the text to append to the current text within the input field
      */
     public void appendType(final String text) {
+        if (ElementImpl.getAutoHoverOnInput()) hover();
+
         if (text == null) return;
         int retries = 0;
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
@@ -130,6 +134,8 @@ public class TextInputElement implements Element {
      * @param text the text to append to the current text within the input field
      */
     public void prependType(final String text) {
+        if (ElementImpl.getAutoHoverOnInput()) hover();
+
         if (text == null) return;
         int retries = 0;
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
