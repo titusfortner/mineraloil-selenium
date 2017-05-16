@@ -170,4 +170,6 @@ We've bundled our modifications to JUnit in the sample suite. This allows any te
 
 One of the issues with JUnit out of the box is that @Before, @Test and @After are run as a group before TestWatcher calls the #failed method. This is fine in most cases, and you can put a screenshot handler in #failed. This breaks down, howver, if you have an @After method that navigates to a different page - the screenshot taken will be from the @After method and not the @Test method at the time of the failure. We've worked around this and made it so that the screenshots that occur in @BeforeClass, @Before, @Test, @After and @AfterClass have slightly different names so it's clear where the screenshot is from. 
 
-The screenshots are automatically placed in the project /target/screenshots and /target/html-screenshots. 
+The screenshots are, by default, automatically placed in the project /target/screenshots and /target/html-screenshots. 
+
+If you pass a file name that is of the Java class syntax, i.e. ```Screenshot.takeScreenshot("mytestfolder.TestClass.testMethod")``` or ```Screenshot.takeScreenshot("mytestfolder.TestClass")```, the project /target/screenshots directory will automatically generate subfolders /mytestfolder/TestClass/ with screenshots named either after the test method in the string (i.e. ```testMethod_132532.png```), or the test class (i.e. ```testclass_1230432.png```) if the test method is not appended in the file name.
