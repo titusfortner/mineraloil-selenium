@@ -137,7 +137,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public void click() {
         waitUntilDisplayed();
 
-        if (autoHoverOnInput) hover();
+        autoHover();
 
         callSelenium(() -> {
             locateElement().click();
@@ -150,7 +150,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public void clickWithOffset(int x, int y) {
         waitUntilDisplayed();
 
-        if (autoHoverOnInput) hover();
+        autoHover();
 
         callSelenium(() -> {
             DriverManager.INSTANCE.getActions().moveToElement(locateElement(), x, y).click().perform();
@@ -163,7 +163,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public void doubleClick() {
         waitUntilDisplayed();
 
-        if (autoHoverOnInput) hover();
+        autoHover();
 
         callSelenium(() -> {
             DriverManager.INSTANCE.getActions().doubleClick(locateElement());
@@ -277,12 +277,17 @@ class ElementImpl<T extends Element> implements Element<T> {
     public void sendKeys(final Keys... keys) {
         waitUntilDisplayed();
 
-        if (autoHoverOnInput) hover();
+        autoHover();
 
         callSelenium(() -> {
             locateElement().sendKeys(keys);
             return null;
         });
+    }
+
+    @Override
+    public void autoHover() {
+        if (autoHoverOnInput && hoverElement == null) hover();
     }
 
     @Override

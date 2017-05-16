@@ -45,7 +45,7 @@ public class TextInputElement implements Element {
      * @param text the text to put into the text area
      */
     public void type(final String text) {
-        if (ElementImpl.getAutoHoverOnInput()) hover();
+        autoHover();
 
         if (text == null) return;
         waitUntilEnabled();
@@ -111,7 +111,7 @@ public class TextInputElement implements Element {
      * @param text the text to append to the current text within the input field
      */
     public void appendType(final String text) {
-        if (ElementImpl.getAutoHoverOnInput()) hover();
+        autoHover();
 
         if (text == null) return;
         int retries = 0;
@@ -134,7 +134,7 @@ public class TextInputElement implements Element {
      * @param text the text to append to the current text within the input field
      */
     public void prependType(final String text) {
-        if (ElementImpl.getAutoHoverOnInput()) hover();
+        autoHover();
 
         if (text == null) return;
         int retries = 0;

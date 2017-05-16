@@ -50,4 +50,6 @@ public interface ElementActions {
 
     void flash();
 
+    void autoHover();
+
 }
