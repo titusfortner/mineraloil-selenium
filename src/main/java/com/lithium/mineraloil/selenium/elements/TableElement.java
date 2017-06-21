@@ -11,22 +11,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import java.util.stream.IntStream;
 
 public class TableElement implements Element {
-    private ElementList<TableRowElement> rows;
+    private List<TableRowElement> rows;
     private TableRowElement header;
 
     @Delegate
     private final ElementImpl<TableElement> elementImpl;
 
-    public TableElement(By by) {
-        elementImpl = new ElementImpl(this, by);
+    TableElement(Driver driver, By by) {
+        elementImpl = new ElementImpl(driver, this, by);
     }
 
-    public TableElement(By by, int index) {
-        elementImpl = new ElementImpl(this, by, index);
+    private TableElement(Driver driver, By by, int index) {
+        elementImpl = new ElementImpl(driver, this, by, index);
     }
+
+    public List<TableElement> toList() {
+        List<TableElement> elements = new ArrayList<>();
+        IntStream.range(0, locateElements().size()).forEach(index -> {
+            elements.add(new TableElement(elementImpl.driver, elementImpl.by, index).withParent(getParentElement())
+                                                                                    .withIframe(getIframeElement())
+                                                                                    .withHover(getHoverElement())
+                                                                                    .withAutoScrollIntoView(isAutoScrollIntoView()));
+        });
+        return elements;
+    }
+
 
     public int size() {
         return 1 + getRows().size();
@@ -39,9 +51,9 @@ public class TableElement implements Element {
         return header;
     }
 
-    public ElementList<TableRowElement> getRows() {
+    public List<TableRowElement> getRows() {
         if (rows == null) {
-            rows = createTableRowElements(By.tagName("tr"));
+            rows = createTableRowElement(By.tagName("tr")).toList();
         }
         return rows;
     }

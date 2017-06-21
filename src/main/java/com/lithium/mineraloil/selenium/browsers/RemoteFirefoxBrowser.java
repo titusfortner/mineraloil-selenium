@@ -1,5 +1,6 @@
 package com.lithium.mineraloil.selenium.browsers;
 
+import com.google.common.base.Throwables;
 import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
@@ -8,14 +9,15 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Callable;
 
 @Slf4j
-public class RemoteFirefoxBrowser extends RemoteBrowser {
+public class RemoteFirefoxBrowser {
     private final FirefoxProfile firefoxProfile;
     private final int remoteFirefoxPort;
     private final String remoteWebdriverAddress;
+    private URL serverAddress;
 
     public RemoteFirefoxBrowser(DriverConfiguration driverConfiguration) {
         firefoxProfile = driverConfiguration.getFirefoxProfile();
@@ -23,35 +25,15 @@ public class RemoteFirefoxBrowser extends RemoteBrowser {
         remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
     }
 
-    @Override
     public WebDriver getDriver() {
-        return getDriver(remoteWebdriverAddress, remoteFirefoxPort);
-    }
-
-    @Override
-    void logCapabilities() {
-        log.info(String.format("Desired Capabilities: %s", firefoxProfile));
-    }
-
-    @Override
-    Callable<WebDriver> getDriverThreadCallableInstance() {
-        return new GridDriverThread(serverAddress, firefoxProfile);
-    }
-
-    private class GridDriverThread implements Callable<WebDriver> {
-        URL serverAddress;
-        FirefoxProfile profile;
+        try {
+            serverAddress = new URL(String.format("http://%s:%s/wd/hub", remoteWebdriverAddress, remoteFirefoxPort));
+            log.info(String.format("Attempting to connect to %s", serverAddress));
+        } catch (MalformedURLException e) {
+            Throwables.propagate(e);
+        }
         DesiredCapabilities capabilities = DesiredCapabilities.firefox();
-
-        public GridDriverThread(URL serverAddress, FirefoxProfile profile) {
-            this.serverAddress = serverAddress;
-            this.profile = profile;
-            capabilities.setCapability(FirefoxDriver.PROFILE, profile);
-        }
-
-        @Override
-        public WebDriver call() {
-            return new RemoteWebDriver(serverAddress, capabilities);
-        }
+        capabilities.setCapability(FirefoxDriver.PROFILE, firefoxProfile);
+        return new RemoteWebDriver(serverAddress, capabilities);
     }
 }

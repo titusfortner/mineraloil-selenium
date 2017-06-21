@@ -7,8 +7,10 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.support.ui.Select;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -16,13 +18,25 @@ public class SelectListElement implements Element, SelectList {
     @Delegate
     private final ElementImpl<SelectListElement> elementImpl;
 
-    public SelectListElement(By by) {
-        elementImpl = new ElementImpl(this, by);
+    SelectListElement(Driver driver, By by) {
+        elementImpl = new ElementImpl(driver, this, by);
     }
 
-    public SelectListElement(By by, int index) {
-        elementImpl = new ElementImpl(this, by, index);
+    private SelectListElement(Driver driver, By by, int index) {
+        elementImpl = new ElementImpl(driver, this, by, index);
     }
+
+    public List<SelectListElement> toList() {
+        List<SelectListElement> elements = new ArrayList<>();
+        IntStream.range(0, locateElements().size()).forEach(index -> {
+            elements.add(new SelectListElement(elementImpl.driver, elementImpl.by, index).withParent(getParentElement())
+                                                                                         .withIframe(getIframeElement())
+                                                                                         .withHover(getHoverElement())
+                                                                                         .withAutoScrollIntoView(isAutoScrollIntoView()));
+        });
+        return elements;
+    }
+
 
     @Override
     public String getSelectedOption() {

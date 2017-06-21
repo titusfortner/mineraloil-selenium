@@ -18,7 +18,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.Set;
 
-public class WebdriverActions {
+class WebdriverActions {
     private WebDriver driver;
 
     public WebdriverActions(@NonNull WebDriver driver) {

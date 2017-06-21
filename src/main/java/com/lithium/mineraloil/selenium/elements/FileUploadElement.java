@@ -6,6 +6,9 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriverException;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -13,12 +16,23 @@ public class FileUploadElement implements Element {
     @Delegate
     private final ElementImpl<FileUploadElement> elementImpl;
 
-    public FileUploadElement(By by) {
-        elementImpl = new ElementImpl(this, by);
+    FileUploadElement(Driver driver, By by) {
+        elementImpl = new ElementImpl(driver, this, by);
     }
 
-    public FileUploadElement(By by, int index) {
-        elementImpl = new ElementImpl(this, by, index);
+    private FileUploadElement(Driver driver, By by, int index) {
+        elementImpl = new ElementImpl(driver, this, by, index);
+    }
+
+    public List<FileUploadElement> toList() {
+        List<FileUploadElement> elements = new ArrayList<>();
+        IntStream.range(0, locateElements().size()).forEach(index -> {
+            elements.add(new FileUploadElement(elementImpl.driver, elementImpl.by, index).withParent(getParentElement())
+                                                                                         .withIframe(getIframeElement())
+                                                                                         .withHover(getHoverElement())
+                                                                                         .withAutoScrollIntoView(isAutoScrollIntoView()));
+        });
+        return elements;
     }
 
     public void type(final String text) {

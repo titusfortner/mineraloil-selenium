@@ -3,7 +3,6 @@ package com.lithium.mineraloil.selenium.elements;
 import com.google.common.base.Throwables;
 import com.jayway.awaitility.core.ConditionTimeoutException;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.By.ByXPath;
@@ -14,57 +13,57 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static com.lithium.mineraloil.selenium.elements.Waiter.DISPLAY_WAIT_S;
+import static com.lithium.mineraloil.selenium.elements.Waiter.INTERACT_WAIT_S;
 import static com.lithium.mineraloil.selenium.elements.Waiter.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 class ElementImpl<T extends Element> implements Element<T> {
-    private int index = -1;
-    private Element referenceElement;
-    private boolean scrollIntoView = false;
-
-    @Setter private Element iframeElement;
-    @Setter private Element hoverElement;
-    @Getter private Element parentElement;
-    @Getter private final By by;
-    @Getter private WebElement webElement;
+    protected Driver driver;
     private int LOCATE_RETRIES = 2;
+    protected Element referenceElement;
+    private int index = -1;
 
-    private static boolean autoHoverOnInput;
+    @Getter private static boolean autoHoverOnInput;
+    @Getter protected boolean autoScrollIntoView = false;
+    @Getter protected Element iframeElement;
+    @Getter protected Element hoverElement;
+    @Getter protected Element parentElement;
+    @Getter protected By by;
 
-    public ElementImpl(Element<T> referenceElement, By by) {
+    public ElementImpl(Driver driver, Element<T> referenceElement, By by) {
+        this.driver = driver;
         this.referenceElement = referenceElement;
         this.by = by;
     }
 
-    public ElementImpl(Element<T> referenceElement, By by, int index) {
+    public ElementImpl(Driver driver, Element<T> referenceElement, By by, int index) {
+        this.driver = driver;
         this.referenceElement = referenceElement;
         this.by = by;
         this.index = index;
     }
 
-    public ElementImpl(Element<T> referenceElement, Element parentElement, By by) {
+    public ElementImpl(Driver driver, Element<T> referenceElement, Element parentElement, By by) {
+        this.driver = driver;
         this.referenceElement = referenceElement;
         this.parentElement = parentElement;
         this.by = by;
     }
-
-    public ElementImpl(Element<T> referenceElement, Element parentElement, By by, int index) {
-        this.referenceElement = referenceElement;
-        this.parentElement = parentElement;
-        this.by = by;
-        this.index = index;
-    }
-
 
     @Override
     public WebElement locateElement() {
+        // the class was initialized with an index so use it
+        if (index >= 0) return locateElements().get(index);
+
+        WebElement element;
         if (isWithinIFrame()) {
             ((BaseElement) iframeElement).switchFocusToIFrame();
         } else {
@@ -78,40 +77,53 @@ class ElementImpl<T extends Element> implements Element<T> {
             if (by instanceof ByXPath) {
                 parentBy = getByForParentElement(by);
             }
-            if (index >= 0) {
-                List<WebElement> elements = parentElement.locateElement().findElements(parentBy);
-                if (index > elements.size() - 1) {
-                    throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
-                }
-                webElement = elements.get(index);
-            } else {
-                webElement = parentElement.locateElement().findElement(parentBy);
-            }
+            element = parentElement.locateElement().findElement(parentBy);
         } else {
-            if (index >= 0) {
-                List<WebElement> elements = DriverManager.INSTANCE.getDriver().findElements(by);
-                if (index > elements.size() - 1) {
-                    throw new NoSuchElementException(String.format("Unable to locate an element at index: %s using %s", index, getBy()));
-                }
-                webElement = elements.get(index);
-            } else {
-                webElement = DriverManager.INSTANCE.getDriver().findElement(by);
-            }
+            element = driver.findElement(by);
         }
 
-        if (scrollIntoView) {
-            scrollElement(webElement);
+        if (autoScrollIntoView) {
+            scrollElement(element);
         }
 
-        return webElement;
+        return element;
     }
 
-    public <T> T callSelenium(Callable<T> callable) {
+    public List<WebElement> locateElements() {
+        List<WebElement> elements;
+        if (isWithinIFrame()) {
+            ((BaseElement) iframeElement).switchFocusToIFrame();
+        } else {
+            switchFocusFromIFrame();
+        }
+
+        if (hoverElement != null && hoverElement.isDisplayed()) hoverElement.hover();
+
+        if (parentElement != null) {
+            By parentBy;
+            if (by instanceof ByXPath) {
+                parentBy = getByForParentElement(by);
+            } else {
+                parentBy = by;
+            }
+            elements = getListWebElements(() -> parentElement.locateElement().findElements(parentBy));
+        } else {
+            elements = getListWebElements(() -> driver.findElements(by));
+        }
+
+        if (autoScrollIntoView && !elements.isEmpty()) {
+            scrollElement(elements.get(0));
+        }
+
+        return elements;
+    }
+
+    private <T> T callSelenium(Callable<T> callable) {
         // default exception that gets thrown on a timeout
         WebDriverException exception = new WebDriverException("Unable to locate element: " + getBy());
 
         int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.INTERACT_WAIT_S);
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(INTERACT_WAIT_S);
         while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
             try {
                 return callable.call();
@@ -125,8 +137,26 @@ class ElementImpl<T extends Element> implements Element<T> {
         throw new NoSuchElementException(exception.getMessage());
     }
 
-    public static boolean getAutoHoverOnInput() {
-        return autoHoverOnInput;
+    // this is used as a best effort to make sure lists have an item in them.
+    // If nothing found by the timeout, return an empty list
+    private List<WebElement> getListWebElements(Callable<List<WebElement>> callable) {
+        int retries = 0;
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(INTERACT_WAIT_S);
+        while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
+            try {
+                List<WebElement> elements = callable.call();
+                if (elements.size() == 0) continue;
+                ;
+                return elements;
+            } catch (WebDriverException e) {
+                retries++;
+            } catch (Exception e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        // no elements found so return an empty list
+        return new ArrayList<>();
     }
 
     public static void setAutoHoverOnInput(Boolean value) {
@@ -141,7 +171,6 @@ class ElementImpl<T extends Element> implements Element<T> {
 
         callSelenium(() -> {
             locateElement().click();
-            DriverManager.INSTANCE.waitForPageLoad();
             return null;
         });
     }
@@ -153,8 +182,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         autoHover();
 
         callSelenium(() -> {
-            DriverManager.INSTANCE.getActions().moveToElement(locateElement(), x, y).click().perform();
-            DriverManager.INSTANCE.waitForPageLoad();
+            driver.getActions().moveToElement(locateElement(), x, y).click().perform();
             return null;
         });
     }
@@ -166,45 +194,34 @@ class ElementImpl<T extends Element> implements Element<T> {
         autoHover();
 
         callSelenium(() -> {
-            DriverManager.INSTANCE.getActions().doubleClick(locateElement());
-            DriverManager.INSTANCE.waitForPageLoad();
+            driver.getActions().doubleClick(locateElement());
             return null;
         });
     }
 
     @Override
     public String getAttribute(final String name) {
-        return callSelenium(() -> {
-            return locateElement().getAttribute(name);
-        });
+        return callSelenium(() -> locateElement().getAttribute(name));
     }
 
     @Override
     public String getTagName() {
-        return callSelenium(() -> {
-            return locateElement().getTagName();
-        });
+        return callSelenium(() -> locateElement().getTagName());
     }
 
     @Override
     public String getCssValue(final String name) {
-        return callSelenium(() -> {
-            return locateElement().getCssValue(name);
-        });
+        return callSelenium(() -> locateElement().getCssValue(name));
     }
 
     @Override
     public String getText() {
-        return callSelenium(() -> {
-            return locateElement().getAttribute("textContent").replaceAll("\u00A0", " ").trim();
-        });
+        return callSelenium(() -> locateElement().getAttribute("textContent").replaceAll("\u00A0", " ").trim());
     }
 
     @Override
     public String getInnerText() {
-        return callSelenium(() -> {
-            return locateElement().getAttribute("innerText").replaceAll("\u00A0", " ").trim();
-        });
+        return callSelenium(() -> locateElement().getAttribute("innerText").replaceAll("\u00A0", " ").trim());
     }
 
     @Override
@@ -261,7 +278,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         try {
             await().until(() -> {
                 try {
-                    final Actions hoverHandler = DriverManager.INSTANCE.getActions();
+                    final Actions hoverHandler = driver.getActions();
                     hoverHandler.moveToElement(locateElement()).perform();
                     return true;
                 } catch (WebDriverException e) {
@@ -304,7 +321,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         waitUntilDisplayed();
 
         return callSelenium(() -> {
-            return DriverManager.INSTANCE.switchTo().activeElement().equals(locateElement());
+            return driver.switchTo().activeElement().equals(locateElement());
         });
     }
 
@@ -313,7 +330,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         waitUntilDisplayed();
 
         callSelenium(() -> {
-            DriverManager.INSTANCE.getActions().moveToElement(locateElement()).perform();
+            driver.getActions().moveToElement(locateElement()).perform();
             return null;
         });
     }
@@ -326,132 +343,27 @@ class ElementImpl<T extends Element> implements Element<T> {
         });
     }
 
-    @Override
-    public BaseElement createBaseElement(By childBy) {
-        return new BaseElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<BaseElement> createBaseElements(By childBy) {
-        return new ElementList<BaseElement>(childBy, BaseElement.class).withParent(this);
-    }
-
-    @Override
-    public ButtonElement createButtonElement(By childBy) {
-        return new ButtonElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<ButtonElement> createButtonElements(By childBy) {
-        return new ElementList<ButtonElement>(childBy, ButtonElement.class).withParent(this);
-    }
-
-    @Override
-    public CheckboxElement createCheckboxElement(By childBy) {
-        return new CheckboxElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<CheckboxElement> createCheckboxElements(By childBy) {
-        return new ElementList<CheckboxElement>(childBy, CheckboxElement.class).withParent(this);
-    }
-
-    @Override
-    public RadioElement createRadioElement(By childBy) {
-        return new RadioElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<RadioElement> createRadioElements(By childBy) {
-        return new ElementList<RadioElement>(childBy, RadioElement.class).withParent(this);
-    }
-
-    @Override
-    public ImageElement createImageElement(By childBy) {
-        return new ImageElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<ImageElement> createImageElements(By childBy) {
-        return new ElementList<ImageElement>(childBy, ImageElement.class).withParent(this);
-    }
-
-    @Override
-    public LinkElement createLinkElement(By childBy) {
-        return new LinkElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<LinkElement> createLinkElements(By childBy) {
-        return new ElementList<LinkElement>(childBy, LinkElement.class).withParent(this);
-    }
-
-    @Override
-    public TextInputElement createTextInputElement(By childBy) {
-        return new TextInputElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<TextInputElement> createTextInputElements(By childBy) {
-        return new ElementList<TextInputElement>(childBy, TextInputElement.class).withParent(this);
-    }
-
-    @Override
-    public SelectListElement createSelectListElement(By by) {
-        return new SelectListElement(by).withParent(this);
-    }
-
-    @Override
-    public ElementList<SelectListElement> createSelectListElements(By by) {
-        return new ElementList<SelectListElement>(by, SelectListElement.class).withParent(this);
-    }
-
-    @Override
-    public FileUploadElement createFileUploadElement(By childBy) {
-        return new FileUploadElement(childBy).withParent(this);
-    }
-
-    @Override
-    public TableElement createTableElement(By childBy) {
-        return new TableElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<TableElement> createTableElements(By childBy) {
-        return new ElementList<TableElement>(childBy, TableElement.class).withParent(this);
-    }
-
-    @Override
-    public TableRowElement createTableRowElement(By childBy) {
-        return new TableRowElement(childBy).withParent(this);
-    }
-
-    @Override
-    public ElementList<TableRowElement> createTableRowElements(By childBy) {
-        return new ElementList<TableRowElement>(childBy, TableRowElement.class).withParent(this);
-    }
-
     public void flash() {
         waitUntilDisplayed();
         final WebElement element = locateElement();
-        String elementColor = (String) DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor", element);
+        String elementColor = (String) driver.executeScript("arguments[0].style.backgroundColor", element);
         elementColor = (elementColor == null) ? "" : elementColor;
         for (int i = 0; i < 20; i++) {
             String bgColor = (i % 2 == 0) ? "red" : elementColor;
-            DriverManager.INSTANCE.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
+            driver.executeScript(String.format("arguments[0].style.backgroundColor = '%s'", bgColor), element);
         }
-        DriverManager.INSTANCE.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
+        driver.executeScript("arguments[0].style.backgroundColor = arguments[1]", element, elementColor);
     }
 
     public void switchFocusToIFrame() {
-        DriverManager.INSTANCE.switchTo().frame(locateElement());
+        driver.switchTo().frame(locateElement());
     }
 
-    public static void switchFocusFromIFrame() {
+    public void switchFocusFromIFrame() {
         try {
-            DriverManager.INSTANCE.switchTo().parentFrame();
+            driver.switchTo().parentFrame();
         } catch (Exception e) {
-            DriverManager.INSTANCE.switchTo().defaultContent();
+            driver.switchTo().defaultContent();
         }
     }
 
@@ -462,7 +374,7 @@ class ElementImpl<T extends Element> implements Element<T> {
                .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
     }
 
-    private boolean isWithinIFrame() {
+    protected boolean isWithinIFrame() {
         return iframeElement != null;
     }
 
@@ -480,7 +392,12 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public T withAutoScrollIntoView() {
-        this.scrollIntoView = true;
+        this.autoScrollIntoView = true;
+        return (T) referenceElement;
+    }
+
+    public T withAutoScrollIntoView(Boolean value) {
+        this.autoScrollIntoView = value;
         return (T) referenceElement;
     }
 
@@ -490,18 +407,18 @@ class ElementImpl<T extends Element> implements Element<T> {
         return (T) referenceElement;
     }
 
-    private static void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
+    private void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
         String cancelPreviousEventJS = "if (evObj && evObj.stopPropagation) { evObj.stopPropagation(); }";
         String dispatchEventJS = String.format("var evObj = document.createEvent('Event'); evObj.initEvent('%s', arguments[1], arguments[2]); arguments[0].dispatchEvent(evObj);",
                                                event);
-        DriverManager.INSTANCE.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
+        driver.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
                                              element,
                                              eventParam1,
                                              eventParam2);
     }
 
-    private void scrollElement(WebElement webElement) {
-        DriverManager.INSTANCE.executeScript("arguments[0].scrollIntoView(true);", webElement);
+    protected void scrollElement(WebElement webElement) {
+        driver.executeScript("arguments[0].scrollIntoView(true);", webElement);
     }
 
     /*
@@ -559,6 +476,51 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public void waitUntilNotEnabled(TimeUnit timeUnit, final int timeout) {
         await().atMost(timeout, timeUnit).until(() -> !isDisplayed() || !isEnabled());
+    }
+
+    @Override
+    public BaseElement createBaseElement(By by) {
+        return new BaseElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public CheckboxElement createCheckboxElement(By by) {
+        return new CheckboxElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public RadioElement createRadioElement(By by) {
+        return new RadioElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public ImageElement createImageElement(By by) {
+        return new ImageElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public TextElement createTextElement(By by) {
+        return new TextElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public SelectListElement createSelectListElement(By by) {
+        return new SelectListElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public FileUploadElement createFileUploadElement(By by) {
+        return new FileUploadElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public TableElement createTableElement(By by) {
+        return new TableElement(driver, by).withParent(this);
+    }
+
+    @Override
+    public TableRowElement createTableRowElement(By by) {
+        return new TableRowElement(driver, by).withParent(this);
     }
 
 }

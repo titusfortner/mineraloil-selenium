@@ -1,2 +1,0 @@
-When running in IntelliJ please make sure to mark the java directory as a 'test sources directory'
-and the resources directory as a 'test resources directory'. Otherwise it won't find the bundled chromedriver.

@@ -3,18 +3,33 @@ package com.lithium.mineraloil.selenium.elements;
 import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 
-public class CheckboxElement implements Element {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
+public class CheckboxElement implements Element {
     @Delegate
     private final ElementImpl<CheckboxElement> elementImpl;
 
-    public CheckboxElement(By by) {
-        elementImpl = new ElementImpl(this, by);
+    CheckboxElement(Driver driver, By by) {
+        elementImpl = new ElementImpl(driver, this, by);
     }
 
-    public CheckboxElement(By by, int index) {
-        elementImpl = new ElementImpl(this, by, index);
+    private CheckboxElement(Driver driver, By by, int index) {
+        elementImpl = new ElementImpl(driver, this, by, index);
     }
+
+    public List<CheckboxElement> toList() {
+        List<CheckboxElement> elements = new ArrayList<>();
+        IntStream.range(0, locateElements().size()).forEach(index -> {
+            elements.add(new CheckboxElement(elementImpl.driver, elementImpl.by, index).withParent(getParentElement())
+                                                                                       .withIframe(getIframeElement())
+                                                                                       .withHover(getHoverElement())
+                                                                                       .withAutoScrollIntoView(isAutoScrollIntoView()));
+        });
+        return elements;
+    }
+
 
     public void check() {
         if (!isChecked()) elementImpl.click();
