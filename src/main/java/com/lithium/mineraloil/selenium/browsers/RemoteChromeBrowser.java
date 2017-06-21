@@ -1,21 +1,19 @@
 package com.lithium.mineraloil.selenium.browsers;
 
-import com.google.common.base.Throwables;
 import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Callable;
 
 @Slf4j
-public class RemoteChromeBrowser {
+public class RemoteChromeBrowser extends RemoteBrowser {
     private final DesiredCapabilities desiredCapabilities;
     private final int remoteChromePort;
     private final String remoteWebdriverAddress;
-    protected static URL serverAddress;
 
     public RemoteChromeBrowser(DriverConfiguration driverConfiguration) {
         desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
@@ -23,14 +21,35 @@ public class RemoteChromeBrowser {
         remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
     }
 
+    @Override
     public WebDriver getDriver() {
-        try {
-            serverAddress = new URL(String.format("http://%s:%s/wd/hub", remoteWebdriverAddress, remoteChromePort));
-            log.info(String.format("Attempting to connect to %s", serverAddress));
-        } catch (MalformedURLException e) {
-            Throwables.propagate(e);
+        return getDriver(remoteWebdriverAddress, remoteChromePort);
+    }
+
+    @Override
+    void logCapabilities() {
+        log.info(String.format("Desired Capabilities: %s", desiredCapabilities));
+    }
+
+    @Override
+    Callable<WebDriver> getDriverThreadCallableInstance() {
+        return new GridDriverThread(serverAddress, desiredCapabilities);
+    }
+
+    private class GridDriverThread implements Callable<WebDriver> {
+
+        URL serverAddress;
+        DesiredCapabilities profile;
+
+        public GridDriverThread(URL serverAddress, DesiredCapabilities profile) {
+            this.serverAddress = serverAddress;
+            this.profile = profile;
         }
-        return new RemoteWebDriver(serverAddress, desiredCapabilities);
+
+        @Override
+        public WebDriver call() {
+            return new RemoteWebDriver(serverAddress, profile);
+        }
     }
 
 
