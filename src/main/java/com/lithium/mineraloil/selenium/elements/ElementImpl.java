@@ -61,7 +61,14 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public WebElement locateElement() {
         // the class was initialized with an index so use it
-        if (index >= 0) return locateElements().get(index);
+        if (index >= 0) {
+            List<WebElement> elements = locateElements();
+            if (index < elements.size()) {
+                return locateElements().get(index);
+            } else {
+                throw new NoSuchElementException(String.format("Unable to locate element using %s and %s", by, index));
+            }
+        }
 
         WebElement element;
         if (isWithinIFrame()) {
