@@ -43,7 +43,7 @@ public class Driver {
         log.info("User Agent: " + getUserAgent());
     }
 
-    public void stopDriver() {
+    public void stopLastDriver() {
         DriverInstance driverInstance = drivers.removeLast();
         log.info(String.format("Stopping Last Opened Driver. Drivers Running: %s", getDriverCount()));
         driverInstance.getDriver().quit();
@@ -69,7 +69,7 @@ public class Driver {
         } catch (UnreachableBrowserException e) {
             // this is a workaround for losing the connection or failing to start driver
             log.info("WebDriver died...attempting restart");
-            stopDriver();
+            stopLastDriver();
             startDriver();
             getDriver().get(url);
         }
@@ -104,7 +104,7 @@ public class Driver {
     public void stop() {
         while (isDriverStarted()) {
             try {
-                stopDriver();
+                stopLastDriver();
             } catch (WebDriverException e) {
                 log.info(String.format("There was an ignored exception closing the web driver : %s", e));
             }
