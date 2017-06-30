@@ -4,6 +4,7 @@ import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
 import java.time.Instant;
@@ -44,8 +45,7 @@ public class SelectListElement implements Element, SelectList {
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
         while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
             try {
-                String text = new Select(elementImpl.locateElement()).getFirstSelectedOption().getText();
-                return text;
+                return new Select(elementImpl.locateElement()).getFirstSelectedOption().getText();
             } catch (WebDriverException e) {
                 retries++;
             }
@@ -87,7 +87,7 @@ public class SelectListElement implements Element, SelectList {
             try {
                 return new Select(elementImpl.locateElement()).getOptions()
                                                               .stream()
-                                                              .map(option -> option.getText())
+                                                              .map(WebElement::getText)
                                                               .collect(Collectors.toList());
             } catch (WebDriverException e) {
                 retries++;

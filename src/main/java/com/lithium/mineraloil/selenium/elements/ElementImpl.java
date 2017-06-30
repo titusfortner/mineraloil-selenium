@@ -153,7 +153,6 @@ class ElementImpl<T extends Element> implements Element<T> {
             try {
                 List<WebElement> elements = callable.call();
                 if (elements.size() == 0) continue;
-                ;
                 return elements;
             } catch (WebDriverException e) {
                 retries++;
@@ -452,7 +451,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public void waitUntilDisplayed(TimeUnit timeUnit, final int waitTime) {
-        await().atMost(waitTime, timeUnit).until(() -> isDisplayed());
+        await().atMost(waitTime, timeUnit).until(this::isDisplayed);
     }
 
     @Override

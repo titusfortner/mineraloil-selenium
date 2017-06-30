@@ -6,7 +6,7 @@ import org.openqa.selenium.WebElement;
 
 public interface ElementActions {
 
-    public WebElement locateElement();
+    WebElement locateElement();
 
     void click();
 
