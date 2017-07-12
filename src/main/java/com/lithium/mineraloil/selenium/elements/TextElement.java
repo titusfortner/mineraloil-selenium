@@ -132,7 +132,7 @@ public class TextElement implements Element {
         long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
         while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
             try {
-                elementImpl.locateElement().sendKeys(text);
+                elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_DOWN) + text);
                 return;
             } catch (WebDriverException e) {
                 retries++;
