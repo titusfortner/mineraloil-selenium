@@ -25,6 +25,7 @@ public class FirefoxBrowser implements Browser {
     @Override
     public WebDriver getDriver() {
         log.info(String.format("Firefox Profile: %s", firefoxProfile));
+        System.setProperty("webdriver.firefox.marionette",binaryPath);
         if (StringUtils.isNotBlank(binaryPath)) {
             File file = new File(binaryPath);
             Preconditions.checkArgument(file.exists());
