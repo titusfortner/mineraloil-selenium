@@ -1,9 +1,9 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.google.common.base.Throwables;
-import com.jayway.awaitility.core.ConditionTimeoutException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.By.ByXPath;
 import org.openqa.selenium.Keys;
@@ -413,14 +413,14 @@ class ElementImpl<T extends Element> implements Element<T> {
         return (T) referenceElement;
     }
 
-    private void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
+    private boolean dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
         String cancelPreviousEventJS = "if (evObj && evObj.stopPropagation) { evObj.stopPropagation(); }";
         String dispatchEventJS = String.format("var evObj = document.createEvent('Event'); evObj.initEvent('%s', arguments[1], arguments[2]); arguments[0].dispatchEvent(evObj);",
                                                event);
-        driver.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
-                                             element,
-                                             eventParam1,
-                                             eventParam2);
+        return driver.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
+                                    element,
+                                    eventParam1,
+                                    eventParam2) != null;
     }
 
     protected void scrollElement(WebElement webElement) {

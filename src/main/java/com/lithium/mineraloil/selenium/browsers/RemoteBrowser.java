@@ -1,9 +1,9 @@
 package com.lithium.mineraloil.selenium.browsers;
 
 import com.google.common.base.Throwables;
-import com.jayway.awaitility.core.ConditionTimeoutException;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.WebDriver;
 
 import java.net.MalformedURLException;
@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 
 @Slf4j
 abstract class RemoteBrowser implements Browser {

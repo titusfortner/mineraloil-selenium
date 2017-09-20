@@ -33,7 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <awaitility.version>1.7.0</awaitility.version>
+        <awaitility.version>3.0.0</awaitility.version>
     </properties>
 
     <build>
@@ -134,7 +134,7 @@
             <version>1.7.2</version>
         </dependency>
         <dependency>
-            <groupId>com.jayway.awaitility</groupId>
+            <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
         </dependency>

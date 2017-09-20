@@ -1,7 +1,7 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.core.ConditionFactory;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.openqa.selenium.WebDriverException;
 
 class Waiter {

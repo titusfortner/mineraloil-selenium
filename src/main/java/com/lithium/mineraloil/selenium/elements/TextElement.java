@@ -1,8 +1,8 @@
 package com.lithium.mineraloil.selenium.elements;
 
-import com.jayway.awaitility.core.ConditionTimeoutException;
 import lombok.experimental.Delegate;
 import org.apache.commons.lang3.StringUtils;
+import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
