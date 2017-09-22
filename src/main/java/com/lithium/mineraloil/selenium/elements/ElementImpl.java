@@ -377,7 +377,10 @@ class ElementImpl<T extends Element> implements Element<T> {
         await().atMost(DISPLAY_WAIT_S, SECONDS)
                .pollInterval(Waiter.STALE_ELEMENT_WAIT_MS, MILLISECONDS)
                .ignoreExceptions()
-               .until(() -> dispatchJSEvent(locateElement(), eventName, true, true));
+               .until(() -> {
+                   dispatchJSEvent(locateElement(), eventName, true, true);
+                   return true;
+               });
     }
 
     protected boolean isWithinIFrame() {
@@ -413,14 +416,14 @@ class ElementImpl<T extends Element> implements Element<T> {
         return (T) referenceElement;
     }
 
-    private boolean dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
+    private void dispatchJSEvent(WebElement element, String event, boolean eventParam1, boolean eventParam2) {
         String cancelPreviousEventJS = "if (evObj && evObj.stopPropagation) { evObj.stopPropagation(); }";
         String dispatchEventJS = String.format("var evObj = document.createEvent('Event'); evObj.initEvent('%s', arguments[1], arguments[2]); arguments[0].dispatchEvent(evObj);",
                                                event);
-        return driver.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
-                                    element,
-                                    eventParam1,
-                                    eventParam2) != null;
+        driver.executeScript(cancelPreviousEventJS + " " + dispatchEventJS,
+                             element,
+                             eventParam1,
+                             eventParam2);
     }
 
     protected void scrollElement(WebElement webElement) {
