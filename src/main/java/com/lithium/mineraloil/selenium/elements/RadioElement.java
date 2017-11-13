@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class RadioElement implements Element {
+public class RadioElement implements Element<RadioElement> {
     @Delegate(excludes = {RadioSelection.class})
     private final ElementImpl<RadioElement> elementImpl;
 

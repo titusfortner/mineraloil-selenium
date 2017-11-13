@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class CheckboxElement implements Element {
+public class CheckboxElement implements Element<CheckboxElement> {
     @Delegate
     private final ElementImpl<CheckboxElement> elementImpl;
 

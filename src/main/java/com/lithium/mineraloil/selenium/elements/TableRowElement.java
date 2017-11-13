@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class TableRowElement implements Element {
+public class TableRowElement implements Element<TableRowElement> {
     private List<BaseElement> columns;
 
     @Delegate

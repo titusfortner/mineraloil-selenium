@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class ImageElement implements Element {
+public class ImageElement implements Element<ImageElement> {
 
     @Delegate
     private final ElementImpl<ImageElement> elementImpl;

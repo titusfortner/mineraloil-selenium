@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class TextElement implements Element {
+public class TextElement implements Element<TextElement> {
 
     @Delegate
     private final ElementImpl<TextElement> elementImpl;

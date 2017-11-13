@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class TableElement implements Element {
+public class TableElement implements Element<TableElement> {
     private List<TableRowElement> rows;
     private TableRowElement header;
 

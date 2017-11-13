@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class SelectListElement implements Element, SelectList {
+public class SelectListElement implements Element<SelectListElement>, SelectList {
     @Delegate
     private final ElementImpl<SelectListElement> elementImpl;
 

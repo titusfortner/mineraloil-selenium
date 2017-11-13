@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class FileUploadElement implements Element {
+public class FileUploadElement implements Element<FileUploadElement> {
     @Delegate
     private final ElementImpl<FileUploadElement> elementImpl;
 
