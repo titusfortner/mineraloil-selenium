@@ -140,7 +140,7 @@ public class Driver {
     }
 
     public boolean applicationFrameVisible() {
-        return findElement(applicationFrame).isDisplayed();
+        return findElements(applicationFrame).size() > 0;
     }
 
     private void resetActiveDriverIndex() {
