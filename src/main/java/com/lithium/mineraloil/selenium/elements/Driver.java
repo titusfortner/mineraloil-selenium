@@ -2,6 +2,7 @@ package com.lithium.mineraloil.selenium.elements;
 
 import com.google.common.base.Preconditions;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,9 @@ import java.util.List;
 @Slf4j
 public class Driver {
     private int activeDriverIndex = 0;
+
+    @Getter @Setter
+    private By applicationFrame;
 
     @Setter
     private DriverConfiguration driverConfiguration;
@@ -123,6 +127,20 @@ public class Driver {
         log.info("Console Log output: ");
         executeScript("console.log('Logging Errors');");
         return getDriver().manage().logs().get(LogType.BROWSER);
+    }
+
+    public boolean hasApplicationFrame() {
+        return applicationFrame != null;
+    }
+
+    public void switchToApplicationFrame() {
+        if (applicationFrameVisible()) {
+            switchTo().frame(findElement(applicationFrame));
+        }
+    }
+
+    public boolean applicationFrameVisible() {
+        return findElement(applicationFrame).isDisplayed();
     }
 
     private void resetActiveDriverIndex() {

@@ -367,8 +367,20 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     public void switchFocusFromIFrame() {
         try {
-            driver.switchTo().parentFrame();
+            if (driver.hasApplicationFrame()) {
+                driver.switchToApplicationFrame();
+            } else {
+                driver.switchTo().parentFrame();
+            }
         } catch (Exception e) {
+            getDefaultFrame();
+        }
+    }
+
+    private void getDefaultFrame() {
+        if (driver.hasApplicationFrame()) {
+            driver.switchToApplicationFrame();
+        } else {
             driver.switchTo().defaultContent();
         }
     }
