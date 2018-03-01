@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -25,12 +27,13 @@ public class Screenshot {
     private String className;
     private String classPath;
     private String testClassDirectory = "";
+    private final DateTimeFormatter humanFriendlyFormat = DateTimeFormatter.ofPattern("HH'h'mm'm'ss's'");
     private final Driver driver;
 
     public Screenshot(Driver driver) {
         this.driver = driver;
     }
-    
+
     public void takeScreenshot(String filename) {
         filename = renameIfClassPath(filename);
         screenShotDirectory = testClassDirectory.isEmpty() ? getDirectory("screenshots") : getDirectory("screenshots/" + testClassDirectory);
@@ -39,7 +42,7 @@ public class Screenshot {
         } else {
             if (driver.isDriverStarted()) {
                 try {
-                    filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
+                    filename += "_" + LocalDateTime.now().format(humanFriendlyFormat) + "_" + Thread.currentThread().getId() + ".png";
                     File scrFile = driver.takeScreenshot();
                     log.info("Creating Screenshot: " + screenShotDirectory + filename);
                     FileUtils.copyFile(scrFile, new File(screenShotDirectory + filename));
@@ -54,7 +57,7 @@ public class Screenshot {
 
     public void takeFullDesktopScreenshot(String filename) {
         try {
-            filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".png";
+            filename += "_" + LocalDateTime.now().format(humanFriendlyFormat) + "_" + Thread.currentThread().getId() + ".png";
             BufferedImage img = getScreenAsBufferedImage();
             File output = new File(filename);
             ImageIO.write(img, "png", output);
@@ -68,13 +71,13 @@ public class Screenshot {
 
     public void takeHTMLScreenshot(String filename) {
         filename = renameIfClassPath(filename);
-        htmlScreenShotDirectory = testClassDirectory.isEmpty() ? getDirectory("html-screenshots") : getDirectory("screenshots/" + testClassDirectory) ;
+        htmlScreenShotDirectory = testClassDirectory.isEmpty() ? getDirectory("html-screenshots") : getDirectory("screenshots/" + testClassDirectory);
         if (!driver.isDriverStarted()) {
             log.error("Webdriver not started. Unable to take html snapshot");
             return;
         }
 
-        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + ".html";
+        filename += "_" + LocalDateTime.now().format(humanFriendlyFormat) + "_" + Thread.currentThread().getId() + ".html";
 
         Writer writer = null;
         log.info("Capturing HTML snapshot: " + htmlScreenShotDirectory + filename);
@@ -97,13 +100,12 @@ public class Screenshot {
 
     public void saveConsoleLog(String filename) {
         filename = renameIfClassPath(filename);
-        consoleLogDirectory = testClassDirectory.isEmpty() ? getDirectory("console-logs") : getDirectory("screenshots/" + testClassDirectory) ;
+        consoleLogDirectory = testClassDirectory.isEmpty() ? getDirectory("console-logs") : getDirectory("screenshots/" + testClassDirectory);
         if (!driver.isDriverStarted()) {
             log.error("Webdriver not started. Unable to save log.");
             return;
         }
-
-        filename += "_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId() + "_browser_console.log";
+        filename += "_" + LocalDateTime.now().format(humanFriendlyFormat) + "_" + Thread.currentThread().getId() + "_browser_console.log";
 
         Writer writer = null;
         log.info("Capturing Console Log snapshot: " + consoleLogDirectory + filename);
@@ -113,13 +115,13 @@ public class Screenshot {
                     new OutputStreamWriter(
                             new FileOutputStream(consoleLogDirectory + filename), "utf-8"));
             writer.write(driver.getConsoleLog()
-                                               .filter(Level.ALL)
-                                               .stream()
-                                               .map(logEntry -> logEntry.getLevel().toString()
-                                                                        .concat(": ")
-                                                                        .concat(logEntry.getMessage())
-                                                                        .concat("\n"))
-                                               .collect(Collectors.joining()));
+                    .filter(Level.ALL)
+                    .stream()
+                    .map(logEntry -> logEntry.getLevel().toString()
+                            .concat(": ")
+                            .concat(logEntry.getMessage())
+                            .concat("\n"))
+                    .collect(Collectors.joining()));
         } catch (IOException ex) {
             log.info("Unable to write out current console log");
         } finally {
@@ -146,7 +148,7 @@ public class Screenshot {
     }
 
     private String getDirectory(String name) {
-        String screenshotDirectory = String.format("%s../%s/", ClassLoader.getSystemClassLoader().getSystemResource("").getPath(),name);
+        String screenshotDirectory = String.format("%s../%s/", ClassLoader.getSystemClassLoader().getSystemResource("").getPath(), name);
         File file = new File(screenshotDirectory);
         if (!file.exists()) file.mkdir();
         log.info("Creating screenshot directory: " + screenshotDirectory);
@@ -155,13 +157,13 @@ public class Screenshot {
 
     private String renameIfClassPath(String fileName) {
         String path = attemptToParseClassPathDirectories(fileName);
-        if(path.isEmpty()){
+        if (path.isEmpty()) {
             return fileName;
         } else {
             classPath = truncateClassPath(path);
-            className = path.substring(path.lastIndexOf('.')+1);
-            String newFileName = classPath.length()+className.length()+1 == fileName.length() ? className.toLowerCase()
-                                                                                            : fileName.substring(classPath.length()+className.length()+2);
+            className = path.substring(path.lastIndexOf('.') + 1);
+            String newFileName = classPath.length() + className.length() + 1 == fileName.length() ? className.toLowerCase()
+                    : fileName.substring(classPath.length() + className.length() + 2);
             testClassDirectory = classPath + "/" + className + "/" + newFileName;
             return newFileName;
         }
@@ -170,20 +172,22 @@ public class Screenshot {
     private static String attemptToParseClassPathDirectories(String pathString) {
         String parsedString = pathString;
 
-        while(!parsedString.isEmpty() && !isValidClassPath(parsedString)){
+        while (!parsedString.isEmpty() && !isValidClassPath(parsedString)) {
             parsedString = truncateClassPath(parsedString);
         }
 
         return parsedString;
     }
 
-    private static boolean isValidClassPath(String possibleClassPath){
+    private static boolean isValidClassPath(String possibleClassPath) {
         try {
             return !Class.forName(possibleClassPath).getName().isEmpty();
-        } catch (Exception e){ return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static String truncateClassPath(String classPath) {
-        return classPath.replaceFirst(".\\w*$","");
+        return classPath.replaceFirst(".\\w*$", "");
     }
 }
