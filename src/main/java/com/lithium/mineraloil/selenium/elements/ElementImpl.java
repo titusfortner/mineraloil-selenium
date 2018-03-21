@@ -125,7 +125,7 @@ class ElementImpl<T extends Element> implements Element<T> {
         return elements;
     }
 
-    private <T> T callSelenium(Callable<T> callable) {
+    private <E> E callSelenium(Callable<E> callable) {
         // default exception that gets thrown on a timeout
         WebDriverException exception = new WebDriverException("Unable to locate element: " + getBy());
 
@@ -222,6 +222,12 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public String getText() {
+        waitUntilDisplayed();
+        return getTextFromDOM();
+    }
+
+    @Override
+    public String getTextFromDOM() {
         return callSelenium(() -> locateElement().getAttribute("textContent").replaceAll("\u00A0", " ").trim());
     }
 
@@ -317,18 +323,14 @@ class ElementImpl<T extends Element> implements Element<T> {
     public boolean isSelected() {
         waitUntilDisplayed();
 
-        return callSelenium(() -> {
-            return locateElement().isSelected();
-        });
+        return callSelenium(() -> locateElement().isSelected());
     }
 
     @Override
     public boolean isFocused() {
         waitUntilDisplayed();
 
-        return callSelenium(() -> {
-            return driver.switchTo().activeElement().equals(locateElement());
-        });
+        return callSelenium(() -> driver.switchTo().activeElement().equals(locateElement()));
     }
 
     @Override
