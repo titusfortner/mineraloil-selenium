@@ -72,7 +72,7 @@ public class TableElement implements Element<TableElement> {
             HashMap<String, String> rowHash = new HashMap<>();
             Elements columns = row.select("td");
             for(int i = 0; i < columns.size(); i++) {
-                rowHash.put(headerStrings.get(i), columns.get(i).text());
+                rowHash.put(headerStrings.get(i), columns.eq(i).text());
             }
             listHash.add(rowHash);
         }
