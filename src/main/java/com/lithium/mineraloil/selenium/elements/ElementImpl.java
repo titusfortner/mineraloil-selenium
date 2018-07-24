@@ -33,6 +33,7 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Getter private static boolean autoHoverOnInput;
     @Getter protected boolean autoScrollIntoView = false;
+    @Getter protected boolean autoScrollToEnd = false;
     @Getter protected Element iframeElement;
     @Getter protected Element hoverElement;
     @Getter protected Element parentElement;
@@ -91,6 +92,10 @@ class ElementImpl<T extends Element> implements Element<T> {
 
         if (autoScrollIntoView) {
             scrollElement(element);
+        }
+
+        if (autoScrollToEnd) {
+            scrollToEndElement(element);
         }
 
         return element;
@@ -424,6 +429,16 @@ class ElementImpl<T extends Element> implements Element<T> {
         return (T) referenceElement;
     }
 
+    public T withAutoScrollToEnd() {
+        this.autoScrollToEnd = true;
+        return (T) referenceElement;
+    }
+
+    public T withAutoScrollToEnd(Boolean value) {
+        this.autoScrollToEnd = value;
+        return (T) referenceElement;
+    }
+
     @Override
     public T withParent(Element parentElement) {
         this.parentElement = parentElement;
@@ -442,6 +457,13 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     protected void scrollElement(WebElement webElement) {
         driver.executeScript("arguments[0].scrollIntoView(true);", webElement);
+    }
+
+    /**
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     */
+    protected void scrollToEndElement(WebElement webElement) {
+        driver.executeScript("arguments[0].scrollIntoView(false);", webElement);
     }
 
     /*
