@@ -69,6 +69,11 @@ public class SelectListElement implements Element<SelectListElement>, SelectList
     }
 
     @Override
+    public void select(String optionText, boolean closeSelectListAfterClick) {
+        select(optionText);
+    }
+
+    @Override
     public void selectIfContains(String optionText) {
         List<String> options = getAvailableOptions().stream()
                                                     .filter(opt -> opt.contains(optionText))
