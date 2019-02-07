@@ -308,7 +308,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     @Override
-    public void sendKeys(final Keys... keys) {
+    public void sendKeys(final CharSequence... keys) {
         waitUntilDisplayed();
 
         autoHover();

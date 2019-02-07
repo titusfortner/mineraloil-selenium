@@ -44,7 +44,7 @@ public interface ElementActions {
 
     void hover();
 
-    void sendKeys(final Keys... keys);
+    void sendKeys(final CharSequence... keys);
 
     void fireEvent(String eventName);
 
