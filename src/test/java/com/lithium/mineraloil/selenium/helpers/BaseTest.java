@@ -32,7 +32,7 @@ public class BaseTest {
         BrowserType browserType = BrowserType.valueOf(browser.toUpperCase());
         return DriverConfiguration.builder()
                                   .browserType(browserType)
-                                  .chromeDesiredCapabilities(ChromeSettings.getDesiredCapabilities())
+                                  .chromeOptions(ChromeSettings.getChromeOptions())
                                   .remotePort(4444)
                                   .remoteWebdriverAddress(remoteWebDriverAddress)
                                   .build();

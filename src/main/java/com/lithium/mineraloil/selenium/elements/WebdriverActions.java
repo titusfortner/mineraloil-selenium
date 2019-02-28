@@ -106,6 +106,10 @@ class WebdriverActions {
         return driver.navigate();
     }
 
+    public WebDriver.Options manage() {
+        return driver.manage();
+    }
+
     public Object executeScript(String script) {
         return ((JavascriptExecutor) driver).executeScript(script);
     }

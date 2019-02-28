@@ -4,8 +4,8 @@ import com.lithium.mineraloil.selenium.browsers.BrowserType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 @Builder
 @Data
@@ -15,7 +15,7 @@ public class DriverConfiguration {
     private BrowserType browserType;
     private String executablePath;
     private FirefoxProfile firefoxProfile;
-    private DesiredCapabilities chromeDesiredCapabilities;
+    private ChromeOptions chromeOptions;
     private String downloadDirectory;
     private String remoteWebdriverAddress;
 

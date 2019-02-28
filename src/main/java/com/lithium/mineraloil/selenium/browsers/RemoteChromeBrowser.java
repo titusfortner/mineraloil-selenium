@@ -3,7 +3,7 @@ package com.lithium.mineraloil.selenium.browsers;
 import com.lithium.mineraloil.selenium.elements.DriverConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.net.URL;
@@ -11,12 +11,12 @@ import java.util.concurrent.Callable;
 
 @Slf4j
 public class RemoteChromeBrowser extends RemoteBrowser {
-    private final DesiredCapabilities desiredCapabilities;
+    private final ChromeOptions chromeOptions;
     private final int remoteChromePort;
     private final String remoteWebdriverAddress;
 
     public RemoteChromeBrowser(DriverConfiguration driverConfiguration) {
-        desiredCapabilities = driverConfiguration.getChromeDesiredCapabilities();
+        chromeOptions = driverConfiguration.getChromeOptions();
         remoteChromePort = driverConfiguration.getRemotePort() != 0 ? driverConfiguration.getRemotePort() : 4444;
         remoteWebdriverAddress = driverConfiguration.getRemoteWebdriverAddress();
     }
@@ -28,27 +28,27 @@ public class RemoteChromeBrowser extends RemoteBrowser {
 
     @Override
     void logCapabilities() {
-        log.info(String.format("Desired Capabilities: %s", desiredCapabilities));
+        log.info(String.format("Desired Capabilities: %s", chromeOptions));
     }
 
     @Override
     Callable<WebDriver> getDriverThreadCallableInstance() {
-        return new GridDriverThread(serverAddress, desiredCapabilities);
+        return new GridDriverThread(serverAddress, chromeOptions);
     }
 
     private class GridDriverThread implements Callable<WebDriver> {
 
         URL serverAddress;
-        DesiredCapabilities profile;
+        ChromeOptions chromeOptions;
 
-        public GridDriverThread(URL serverAddress, DesiredCapabilities profile) {
+        public GridDriverThread(URL serverAddress, ChromeOptions chromeOptions) {
             this.serverAddress = serverAddress;
-            this.profile = profile;
+            this.chromeOptions = chromeOptions;
         }
 
         @Override
         public WebDriver call() {
-            return new RemoteWebDriver(serverAddress, profile);
+            return new RemoteWebDriver(serverAddress, chromeOptions);
         }
     }
 

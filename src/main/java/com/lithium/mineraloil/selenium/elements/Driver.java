@@ -63,10 +63,6 @@ public class Driver {
         ElementImpl.setAutoHoverOnInput(true);
     }
 
-    public String toString() {
-        return getDriver().toString();
-    }
-
     public void get(String url) {
         try {
             getDriver().get(url);
