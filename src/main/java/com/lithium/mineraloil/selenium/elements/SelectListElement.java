@@ -3,17 +3,13 @@ package com.lithium.mineraloil.selenium.elements;
 import lombok.experimental.Delegate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class SelectListElement implements Element<SelectListElement>, SelectList {
     @Delegate
@@ -38,34 +34,14 @@ public class SelectListElement implements Element<SelectListElement>, SelectList
         return elements;
     }
 
-
     @Override
     public String getSelectedOption() {
-        int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
-        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
-            try {
-                return new Select(elementImpl.locateElement()).getFirstSelectedOption().getText();
-            } catch (WebDriverException e) {
-                retries++;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element: " + getBy());
+        return runWithRetries(() -> new Select(elementImpl.locateElement()).getFirstSelectedOption().getText());
     }
 
     @Override
     public void select(String optionText) {
-        int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
-        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
-            try {
-                new Select(elementImpl.locateElement()).selectByVisibleText(optionText);
-                return;
-            } catch (WebDriverException e) {
-                retries++;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element: " + getBy());
+        runWithRetries(() -> new Select(elementImpl.locateElement()).selectByVisibleText(optionText));
     }
 
     @Override
@@ -86,18 +62,9 @@ public class SelectListElement implements Element<SelectListElement>, SelectList
 
     @Override
     public List<String> getAvailableOptions() {
-        int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
-        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
-            try {
-                return new Select(elementImpl.locateElement()).getOptions()
-                                                              .stream()
-                                                              .map(WebElement::getText)
-                                                              .collect(Collectors.toList());
-            } catch (WebDriverException e) {
-                retries++;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element: " + getBy());
+        return runWithRetries(() -> new Select(elementImpl.locateElement()).getOptions()
+                                                                           .stream()
+                                                                           .map(WebElement::getText)
+                                                                           .collect(Collectors.toList()));
     }
 }

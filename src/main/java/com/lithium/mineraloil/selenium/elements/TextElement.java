@@ -99,7 +99,7 @@ public class TextElement implements Element<TextElement> {
 
         if (text == null) return;
         runWithRetries(() -> {
-            elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_DOWN) + text);
+            elementImpl.locateElement().sendKeys(Keys.chord(getMetaKey(), Keys.ARROW_DOWN) + text);
         });
     }
 
@@ -114,9 +114,13 @@ public class TextElement implements Element<TextElement> {
 
         if (text == null) return;
         runWithRetries(() -> {
-                elementImpl.locateElement().sendKeys(Keys.chord(Keys.COMMAND, Keys.ARROW_UP) + text);
+                elementImpl.locateElement().sendKeys(Keys.chord(getMetaKey(), Keys.ARROW_UP) + text);
                 moveCursorToEndOfInput();
         });
+    }
+
+    private Keys getMetaKey() {
+        return System.getProperty("os.name").contains("mac") ? Keys.COMMAND : Keys.CONTROL;
     }
 
     private void moveCursorToEndOfInput() {
@@ -144,22 +148,5 @@ public class TextElement implements Element<TextElement> {
         } catch (ConditionTimeoutException e) {
             return false;
         }
-    }
-
-    private void runWithRetries(Runnable runnable) {
-        int retryCount = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
-        WebDriverException exception = null;
-        while (Instant.now().toEpochMilli() < expireTime && retryCount < 2) {
-            try {
-                runnable.run();
-                return;
-            } catch (WebDriverException e) {
-                retryCount++;
-                exception = e;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element: " + getBy(), exception);
-
     }
 }

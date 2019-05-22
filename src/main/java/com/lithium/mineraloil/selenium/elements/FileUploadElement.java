@@ -37,16 +37,6 @@ public class FileUploadElement implements Element<FileUploadElement> {
 
     public void type(final String text) {
         if (text == null) return;
-        int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(Waiter.DISPLAY_WAIT_S);
-        while (Instant.now().toEpochMilli() < expireTime && retries < 2) {
-            try {
-                elementImpl.locateElement().sendKeys(text);
-                return;
-            } catch (WebDriverException e) {
-                retries++;
-            }
-        }
-        throw new NoSuchElementException("Unable to locate element: " + getBy());
+        runWithRetries(() -> elementImpl.locateElement().sendKeys(text));
     }
 }

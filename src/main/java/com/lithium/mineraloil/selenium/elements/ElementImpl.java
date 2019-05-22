@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.By.ByXPath;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -131,11 +130,25 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     private <E> E callSelenium(Callable<E> callable) {
+        return callSelenium(callable, INTERACT_WAIT_S);
+    }
+
+    public <E> E runWithRetries(Callable<E> callable) {
+        return callSelenium(callable, DISPLAY_WAIT_S);
+    }
+    public void runWithRetries(Runnable callable) {
+        runWithRetries(() -> {
+            callable.run();
+            return null;
+        });
+    }
+
+    private <E> E callSelenium(Callable<E> callable, final int waitTime) {
         // default exception that gets thrown on a timeout
         WebDriverException exception = new WebDriverException("Unable to locate element: " + getBy());
 
         int retries = 0;
-        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(INTERACT_WAIT_S);
+        long expireTime = Instant.now().toEpochMilli() + SECONDS.toMillis(waitTime);
         while (Instant.now().toEpochMilli() < expireTime && retries < LOCATE_RETRIES) {
             try {
                 return callable.call();
@@ -143,7 +156,7 @@ class ElementImpl<T extends Element> implements Element<T> {
                 exception = e; //update the exception message to reflect what selenium is reporting
                 retries++;
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
         throw new NoSuchElementException(exception.getMessage());
