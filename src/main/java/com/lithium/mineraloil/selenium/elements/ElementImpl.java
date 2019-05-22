@@ -215,6 +215,19 @@ class ElementImpl<T extends Element> implements Element<T> {
         return callSelenium(() -> locateElement().getAttribute(name));
     }
 
+    public boolean hasClass(final String value) {
+        return hasAttributeValue("class", value);
+    }
+
+    public boolean hasAttributeValue(final String attribute, final String value) {
+        String elementAttr = getAttribute(attribute);
+        if (elementAttr != null) {
+            return elementAttr.contains(value);
+        } else {
+            return false;
+        }
+    }
+
     @Override
     public String getTagName() {
         return callSelenium(() -> locateElement().getTagName());
