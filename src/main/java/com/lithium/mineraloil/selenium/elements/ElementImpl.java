@@ -147,6 +147,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     public <E> E runWithRetries(Callable<E> callable) {
         return callSelenium(callable, DISPLAY_WAIT_S);
     }
+
     public void runWithRetries(Runnable callable) {
         runWithRetries(() -> {
             callable.run();
@@ -451,7 +452,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Override
     public T withIframe(Element iframeElement) {
         this.iframeElement = iframeElement;
-        iframeElement.setIsIframe(true);
+        if (iframeElement != null) iframeElement.setIsIframe(true);
         return (T) referenceElement;
     }
 
