@@ -47,14 +47,6 @@ public class BaseElementTest extends BaseTest {
     }
 
     @Test
-    public void grabElementFromIframe() {
-        BaseElement div = driver.createBaseElement(By.xpath("//div[@id='iframe_div']"));
-        BaseElement iframe = driver.createBaseElement(By.xpath("//iframe"));
-        assertThat(div.isDisplayed()).isFalse();
-        assertThat(div.withIframe(iframe).getText()).isEqualTo("Iframe Things!");
-    }
-
-    @Test
     public void check() {
         CheckboxElement checkboxElement = driver.createCheckboxElement(By.xpath("//input[@type='checkbox']"));
         checkboxElement.check();

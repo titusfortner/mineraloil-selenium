@@ -5,4 +5,6 @@ public interface ElementContext<T extends Element> {
     T withHover(Element hoverElement);
     T withParent(Element parentElement);
     T withAutoScrollIntoView();
+    boolean isIframe();
+    void setIsIframe(boolean isIframe);
 }

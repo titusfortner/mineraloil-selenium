@@ -34,6 +34,7 @@ class ElementImpl<T extends Element> implements Element<T> {
     @Getter protected boolean autoScrollIntoView = false;
     @Getter protected boolean autoScrollToEnd = false;
     @Getter protected Element iframeElement;
+    @Getter protected boolean isIframe;
     @Getter protected Element hoverElement;
     @Getter protected Element parentElement;
     @Getter protected By by;
@@ -60,6 +61,18 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     @Override
     public WebElement locateElement() {
+        WebElement element;
+
+        if (!isIframe()) {
+            switchFocusFromIFrame();
+        }
+
+        if (isWithinIFrame()) {
+            ((BaseElement) iframeElement).switchFocusToIFrame();
+        } else {
+            switchFocusFromIFrame();
+        }
+
         // the class was initialized with an index so use it
         if (index >= 0) {
             List<WebElement> elements = locateElements();
@@ -68,13 +81,6 @@ class ElementImpl<T extends Element> implements Element<T> {
             } else {
                 throw new NoSuchElementException(String.format("Unable to locate element using %s and %s", by, index));
             }
-        }
-
-        WebElement element;
-        if (isWithinIFrame()) {
-            ((BaseElement) iframeElement).switchFocusToIFrame();
-        } else {
-            switchFocusFromIFrame();
         }
 
         if (hoverElement != null && hoverElement.isDisplayed()) hoverElement.hover();
@@ -102,6 +108,11 @@ class ElementImpl<T extends Element> implements Element<T> {
 
     public List<WebElement> locateElements() {
         List<WebElement> elements;
+
+        if (!isIframe()) {
+            switchFocusFromIFrame();
+        }
+
         if (isWithinIFrame()) {
             ((BaseElement) iframeElement).switchFocusToIFrame();
         } else {
@@ -433,8 +444,14 @@ class ElementImpl<T extends Element> implements Element<T> {
     }
 
     @Override
+    public void setIsIframe(boolean isIframe) {
+        this.isIframe = isIframe;
+    }
+
+    @Override
     public T withIframe(Element iframeElement) {
         this.iframeElement = iframeElement;
+        iframeElement.setIsIframe(true);
         return (T) referenceElement;
     }
 
