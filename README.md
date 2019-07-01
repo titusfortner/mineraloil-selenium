@@ -98,17 +98,17 @@ You can chain method calls when creating elements. This is useful when you need 
 
 ### Element lists
 
-You can interact with a list of elements similar to webdriver#findElements. To do this, simply pluralize the driver call: 
+You can interact with a list of elements similar to webdriver#findElements. To do this, simply call `toList()` on the element: 
 
 ```java
 public List<BaseElement> getSearchResults() {
-    return driver.createBaseElements(By.id("foo"));
+    return driver.createBaseElement(By.id("foo")).toList();
 }
 ```
 
 You can also get lists of elements relative to another element: 
 
-`driver.createBaseElement(By.id("foo")).createBaseElements(By.id("bar"));`
+`driver.createBaseElement(By.id("foo")).createBaseElement(By.id("bar")).toList();`
 
 ### IFrames
 
