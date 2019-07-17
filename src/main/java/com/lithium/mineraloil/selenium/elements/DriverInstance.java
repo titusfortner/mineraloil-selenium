@@ -1,7 +1,9 @@
 package com.lithium.mineraloil.selenium.elements;
 
 import com.lithium.mineraloil.selenium.browsers.ChromeBrowser;
+import com.lithium.mineraloil.selenium.browsers.FirefoxBrowser;
 import com.lithium.mineraloil.selenium.browsers.RemoteChromeBrowser;
+import com.lithium.mineraloil.selenium.browsers.RemoteFirefoxBrowser;
 import com.lithium.mineraloil.selenium.exceptions.DriverNotFoundException;
 import lombok.Data;
 import org.openqa.selenium.WebDriver;
@@ -15,9 +17,9 @@ class DriverInstance {
         this.driverConfiguration = driverConfiguration;
         startWebDriver(driverConfiguration);
     }
-    
+
     public DriverInstance(WebDriver driver) {
-        this.driver=driver;
+        this.driver = driver;
     }
 
     private void startWebDriver(DriverConfiguration driverConfiguration) {
@@ -27,6 +29,12 @@ class DriverInstance {
                 break;
             case REMOTE_CHROME:
                 driver = new RemoteChromeBrowser(driverConfiguration).getDriver();
+                break;
+            case FIREFOX:
+                driver = new FirefoxBrowser(driverConfiguration).getDriver();
+                break;
+            case REMOTE_FIREFOX:
+                driver = new RemoteFirefoxBrowser(driverConfiguration).getDriver();
                 break;
             default:
                 throw new DriverNotFoundException("Not sure how to start browser for: " + driverConfiguration.getBrowserType().name());

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
 @Builder
@@ -15,6 +16,7 @@ public class DriverConfiguration {
     private BrowserType browserType;
     private String executablePath;
     private FirefoxProfile firefoxProfile;
+    private FirefoxOptions firefoxOptions;
     private ChromeOptions chromeOptions;
     private String downloadDirectory;
     private String remoteWebdriverAddress;
